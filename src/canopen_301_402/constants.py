@@ -22,6 +22,7 @@ class CanData(Enum): # todo better name
     sdo_upload_request = 0x40        # 0b 0100 0000
     sdo_upload_response = 0x43       # 0b 0100 0011
     sdo_download_request_bits = 0x23 # 0b 0010 0011 
+    sdo_download_response = 0x60     # 0b 0110 0000 
     sdo_error = 0x80
 
 
