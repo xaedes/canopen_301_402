@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from canopen_301_402.constants import *
+
 class Assertions():
     '''
     @summary: Collection of assertions to assert correct data and value sizes
@@ -65,3 +67,13 @@ class Assertions():
         @result: True|False
         '''
         assert (subindex >> 8) == 0
+
+    @classmethod
+    def assert_nmt_command(cls, command):
+        '''
+        @summary:  asserts subindex has at most 8 bits
+        @param cls:
+        @param subindex:
+        @result: True|False
+        '''
+        assert command in Can301StateCommand
