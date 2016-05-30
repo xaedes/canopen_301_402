@@ -12,6 +12,71 @@ class Can301State(Enum):
     stopped = 3 # no sdo and bdo access, only nmt to change state
 
 
+class Assertions():
+    '''
+    @summary: Collection of assertions to assert correct data and value sizes
+    '''
+
+    @classmethod
+    def assert_can_id(cls, can_id):
+        '''
+        @summary:  asserts can_id has at most 11 bits
+        @param cls:
+        @param can_id:
+        @result: True|False
+        '''
+        assert (can_id >> 11) == 0
+
+    @classmethod
+    def assert_data(cls, data, maximum_len=8):
+        '''
+        @summary:  asserts data contains at most maximum_len bytes
+        @param cls:
+        @param function_code:
+        @result: True|False
+        '''
+        assert 0 <= len(data) <= maximum_len
+    
+    @classmethod
+    def assert_function_code(cls, function_code):
+        '''
+        @summary:  asserts function_code has at most 4 bits
+        @param cls:
+        @param function_code:
+        @result: True|False
+        '''
+        assert (function_code >> 4) == 0 
+
+    @classmethod
+    def assert_node_id(cls, node_id):
+        '''
+        @summary:  asserts node_id has at most 7 bits
+        @param cls:
+        @param node_id:
+        @result: True|False
+        '''
+        assert (node_id >> 7) == 0
+
+    @classmethod
+    def assert_index(cls, index):
+        '''
+        @summary:  asserts index has at most 16 bits
+        @param cls:
+        @param index:
+        @result: True|False
+        '''
+        assert (index >> 16) == 0
+
+    @classmethod
+    def assert_subindex(cls, subindex):
+        '''
+        @summary:  asserts subindex has at most 8 bits
+        @param cls:
+        @param subindex:
+        @result: True|False
+        '''
+        assert (subindex >> 8) == 0
+
 class CanOpenId():
     '''
     @summary: can open interpretation of can id:
@@ -30,7 +95,7 @@ class CanOpenId():
         @param can_id: 11 bit can_id
         @result: tuple of 4 bit function code and 7 bit node_id
         '''
-        assert (can_id >> 11) == 0
+        Assertions.assert_can_id(can_id)
 
         function_code = (can_id >> 7) & 0b1111
         node_id = can_id & 0b1111111
@@ -46,9 +111,8 @@ class CanOpenId():
         @param node_id: 7 bit node_id
         @result: 11 bit can_id
         '''
-
-        assert (function_code >> 4) == 0
-        assert (node_id >> 7) == 0
+        Assertions.assert_function_code(function_code)
+        Assertions.assert_node_id(node_id)
 
         can_id = (function_code << 7) | node_id
 
@@ -62,6 +126,8 @@ class CanOpen(can.Listener):
         self.node_states = defaultdict(lambda:Can301State.initialisation)
 
         self.notifier = can.Notifier(self.bus,[self])
+
+        self.response_callbacks = dict()
 
     def start_remote_nodes(self):
         send_nmt(bus, Can301StateCommand.start_remote_node, 0)
@@ -78,8 +144,8 @@ class CanOpen(can.Listener):
         @param data: [byte] 0 <= len(data) <= 4
         @result: 
         '''
-        assert (can_id >> 11) == 0 # maximum 11 bits
-        assert 0 <= len(data) <= 4
+        Assertions.assert_data(data)
+        Assertions.assert_can_id(can_id)
         msg = can.Message(arbitration_id=can_id,data=data],extended_id=False)
         self.bus.send(msg)
 
@@ -90,17 +156,127 @@ class CanOpen(can.Listener):
         @param [node_id=0]: 0 = all nodes
         @result: 
         ''' 
-        self.send_can((CanFunctionCode.nmt << 7), [command, node_id])
 
-    def decode_can_open_id(self, can_id):
-                
-        # can open interpretation of can id:
+        # nmt message always needs node_id = 0 in CanOpenId.encode 
+        # the node_id is specified in second data byte
+
+        can_id = CanOpenId.encode(CanFunctionCode.nmt, 0)
+        self.send_can(can_id, [command, node_id])
+
+    def send_sdo_write_request(self, node_id, index, subindex, data, response_callback):
+        '''
+        @summary: 
+        @param node_id:
+        @param index:
+        @param subindex:
+        @param data: byte array, maximum length: 4 bytes
+        @param response_callback: function(error), where error is None if sucessful or string containing error description
+        @result: 
+        '''
+        Assertions.assert_node_id(node_id)
+        Assertions.assert_index(index)
+        Assertions.assert_subindex(subindex)
+        Assertions.assert_data(data,maximum_len=4)
         
-        # the upper 4 bits of the 11 bit arbitration_id are the function code
-        function_code = (msg.arbitration_id >> 7) & 0b1111
-        # the lower 7 bits of the 11 bit arbitration_id are the node_id
-        node_id = msg.arbitration_id & 0b1111111
-        return function_code, node_id
+        can_id = CanOpenId.encode(CanFunctionCode.sdo_rx, node_id)
+        len_data = len(data)
+
+        if len_data == 0:
+            # Falls keine Angabe der Anzahl Datenbytes erforderlich ist: Byte0 = 0x22
+            sdo_download_request = CanData.sdo_download_request_bits - 1
+        else:
+            sdo_download_request = ((4-len_data)<<2) | CanData.sdo_download_request_bits
+        
+        data = [sdo_download_request,
+                (index & 0xff), 
+                (index>>8), 
+                subindex] + data
+
+        key = ("sdo_write", node_id, index, subindex)
+        self.response_callbacks[key] = response_callback
+
+        self.send_can(can_id, data)
+
+
+    def send_sdo_read_request(self, node_id, index, subindex, response_callback):
+        '''
+        @summary: 
+        @param node_id:
+        @param index:
+        @param subindex:
+        @param response_callback: function(error,[byte]: data=none), where error is None or string containing error description
+        @result: 
+        '''
+        Assertions.assert_node_id(node_id)
+        Assertions.assert_index(index)
+        Assertions.assert_subindex(subindex)
+        can_id = CanOpenId.encode(CanFunctionCode.sdo_rx, node_id)
+        data = [CanData.sdo_upload_request,
+                (index & 0xff), 
+                (index>>8), 
+                subindex]
+
+        key = ("sdo_read", node_id, index, subindex)
+        self.response_callbacks[key] = response_callback
+
+        self.send_can(can_id, data)
+
+    def process_nmt_error_control_msg(self, msg, function_code, node_id, len_data):
+        # boot up message
+        if len_data == 1 and msg.data[0] == 0: 
+            # device starts in state initialization
+            # boot up message signals end of initialization
+            if self.nodes[node_id].state == Can301State.initialisation:
+                self.nodes[node_id].state = Can301State.pre_operational
+
+    def process_sdo_tx_msg(self, msg, function_code, node_id, len_data):
+        # sdo response
+        if len_data == 8:
+            index = msg.data[1] | (msg.data[2] << 8)
+            subindex = msg.data[3]
+
+            # sdo error
+            if msg.data[0] == CanData.sdo_error:
+                # error code is in little endian 
+                error = msg.data[4] | (msg.data[5]<<8) | (msg.data[6]<<16) | (msg.data[7]<<24)
+                if error_msg in CanErrors:
+                    error_msg = CanErrors[error]
+                else:
+                    error_msg = CanErrors.unknown % hex(error)
+
+                # error can happen for both sdo_write and sdo_read
+                for _key in ["sdo_write","sdo_read"]:
+                    key = (_key, node_id, index, subindex)
+                    if key in self.response_callbacks:
+                        # call response callback
+                        self.response_callbacks[key](error=None)
+                        # remove response callback
+                        del self.response_callbacks[key]
+
+            # read response
+            if (msg.data[0] & CanData.sdo_upload_response) == CanData.sdo_upload_response:
+                # len_response_data of sdo object is encoded as this:
+                # msg.data[0] == CanData.sdo_upload_response | ((4-len_response_data)<<2)
+                len_response_data = 4-(msg.data[0] >> 2) & 0b11
+                data = msg.data[4:4+len_response_data]
+
+                key = ("sdo_read", node_id, index, subindex)
+
+                if key in self.response_callbacks:
+                    # call response callback
+                    self.response_callbacks[key](error=None,data=data)
+                    # remove response callback
+                    del self.response_callbacks[key]
+
+            # write response: success
+            if msg.data[0] == 0x60: 
+                # get index and subindex from msg
+                key = ("sdo_write", node_id, index, subindex)
+                if key in self.response_callbacks:
+                    # call response callback
+                    self.response_callbacks[key](error=None)
+                    # remove response callback
+                    del self.response_callbacks[key]
 
     def on_message_received(self,msg):
         print msg
@@ -114,10 +290,7 @@ class CanOpen(can.Listener):
         len_data = len(msg.data) 
         
         if function_code == CanFunctionCode.nmt_error_control:
-            
-            if len_data == 1 and msg.data[0] == 0: # boot up message
-                # device starts in state initialization
-                # boot up message signals end of initialization
-                if self.nodes[node_id].state == Can301State.initialisation:
-                    self.nodes[node_id].state = Can301State.pre_operational
+            self.process_nmt_error_control_msg(msg, function_code, node_id, len_data)
 
+        elif function_code == CanFunctionCode.sdo_tx:
+            self.process_sdo_tx_msg(msg, function_code, node_id, len_data)
