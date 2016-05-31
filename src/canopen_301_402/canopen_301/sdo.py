@@ -3,6 +3,9 @@
 
 import can
 
+from canopen_301_402.constants import *
+from canopen_301_402.assertions import Assertions
+
 class CanOpenSdoTransfer(object):
     '''
     @summary: for use as cooperative base class in CanOpen
@@ -89,7 +92,7 @@ class CanOpenSdoTransfer(object):
                     key = (_key, node_id, index, subindex)
                     if key in self.response_callbacks:
                         # call response callback
-                        self.response_callbacks[key](error=None)
+                        self.response_callbacks[key](error=error_msg)
                         # remove response callback
                         del self.response_callbacks[key]
 
