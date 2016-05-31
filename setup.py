@@ -8,7 +8,7 @@ d = generate_distutils_setup(
     package_dir={'': 'src'},
     ##  don't do this unless you want a globally visible script
     # scripts=['bin/myscript'],
-    # requires=[]
+    requires=["flufl.enum"]
 )
 
 setup(**d)

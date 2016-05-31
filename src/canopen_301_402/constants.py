@@ -1,22 +1,21 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from enum import Enum
+from flufl.enum import Enum
 
-
-class CanFunctionCode(Enum): # todo better name, Kommunikation_DE_7000_00030.PDF pg. 69
-    nmt  = b0000 # node_id must be 0
-    sync = b0001 # node_id must be 0
-    emergency = b0001
-    pdo1_tx = b0011
-    pdo1_rx = b0100
-    pdo2_tx = b0101
-    pdo2_rx = b0110
-    pdo3_tx = b0111
-    pdo3_rx = b1000
-    sdo_tx = b1011
-    sdo_rx = b1100
-    nmt_error_control = b1110   
+class CanFunctionCode(object): # todo better name, Kommunikation_DE_7000_00030.PDF pg. 69
+    nmt  = 0b0000 # node_id must be 0
+    sync = 0b0001 # node_id must be 0
+    emergency = 0b0001
+    pdo1_tx = 0b0011
+    pdo1_rx = 0b0100
+    pdo2_tx = 0b0101
+    pdo2_rx = 0b0110
+    pdo3_tx = 0b0111
+    pdo3_rx = 0b1000
+    sdo_tx = 0b1011
+    sdo_rx = 0b1100
+    nmt_error_control = 0b1110   
 
 class CanData(Enum): # todo better name
     sdo_upload_request = 0x40        # 0b 0100 0000
@@ -54,7 +53,7 @@ CanErrors = dict({
         0x06090032: "domain error: parameter value to small",
         0x060A0023: "resource not available",
         0x08000021: "access not available due to local application",
-        0x08000022: "access not available due to current device state"
+        0x08000022: "access not available due to current device state",
+        "unknown":  "Unknown error code: %s"
     })
 
-CanErrors.unknown = "Unknown error code: %s"

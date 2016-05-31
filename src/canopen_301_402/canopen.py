@@ -79,7 +79,7 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can
         '''
         Assertions.assert_data(data)
         Assertions.assert_can_id(can_id)
-        msg = can.Message(arbitration_id=can_id,data=data],extended_id=False)
+        msg = can.Message(arbitration_id=can_id,data=data,extended_id=False)
         self.bus.send(msg)
 
 

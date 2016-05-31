@@ -40,7 +40,7 @@ class CanOpenNetworkManagement(object):
 
         if self.node_states[node_id] in Can301State.Transitions:
             transitions = Can301State.Transitions[self.nodes[node_id].state]
-        	self.node_states[node_id] = transitions[command]
+            self.node_states[node_id] = transitions[command]
 
         can_id = CanOpenId.encode(CanFunctionCode.nmt, 0)
         self.send_can(can_id, [command, node_id])
@@ -53,5 +53,5 @@ class CanOpenNetworkManagement(object):
             if self.node_states[node_id] == Can301State.initialisation:
                 self.node_states[node_id] = Can301State.pre_operational
             elif self.node_states[node_id] in Can301State.Transitions:
-            	transitions = Can301State.Transitions[self.nodes[node_id].state]
-            	# command = 
+                transitions = Can301State.Transitions[self.nodes[node_id].state]
+                # command = 
