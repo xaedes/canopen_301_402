@@ -93,24 +93,25 @@ class EdsObject(object):
         self.index = index
         self.subindex = subindex
         
-        self.parameter_name=dictionary["ParameterName"]
-        self.object_type=parseIntAutoBase(dictionary["ObjectType"])
+        self.parameter_name = dictionary["ParameterName"]
+        self.object_type = parseIntAutoBase(dictionary["ObjectType"])
+        self.obj_flags = dictionary["ObjFlags"]
         
         if self.object_type == 0x7: 
             # var type
-            self.data_type=parseIntAutoBase(dictionary["DataType"])
-            self.access_type=dictionary["AccessType"]
-            self.default_value=dictionary["DefaultValue"]
-            self.low_limit=parseIntAutoBase(dictionary["LowLimit"])
-            self.high_limit=parseIntAutoBase(dictionary["HighLimit"])
-            self.pdo_mapping=dictionary["PDOMapping"] == "1"
+            self.data_type = parseIntAutoBase(dictionary["DataType"])
+            self.access_type = dictionary["AccessType"]
+            self.default_value = dictionary["DefaultValue"]
+            self.low_limit = parseIntAutoBase(dictionary["LowLimit"])
+            self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
+            self.pdo_mapping = dictionary["PDOMapping"] == "1"
 
         elif self.object_type in [0x8,0x9]: 
             assert self.subindex is None # no deep hierarchy
             # array or record type
 
             # determine number of sub objects
-            self.sub_number=int(dictionary["SubNumber"])
+            self.sub_number = int(dictionary["SubNumber"])
             self.sub_objects = list()
 
             # read sub objects
