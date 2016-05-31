@@ -132,8 +132,12 @@ class EdsObjectList(object):
 
 
 class EdsFile(object):
-    """docstring for EdsFile"""
     def __init__(self):
+        '''
+        @summary: EDS File loader; describing CanOpen device with supported CanOpen objects
+        @result: 
+        '''
+
         super(EdsFile, self).__init__()
         self.config_parser = RawConfigParser(dict_type=defaultdict(lambda:None))
 
@@ -145,6 +149,12 @@ class EdsFile(object):
         self.optional_objects = None
 
     def read(self, filename):
+        '''
+        @summary: reads in eds file from filename
+        @param filename: path specifying eds file
+        @result: 
+        '''
+
         self.config_parser.read(filename)
 
         self.file_info = EdsFileInfo(dict(self.config_parser.items("FileInfo")))
