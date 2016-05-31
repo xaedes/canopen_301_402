@@ -5,9 +5,12 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
+from canopen_301_402.canopen_301.eds import *
+from canopen_301_402.canopen_301.datatypes import CanDatatypes
 from canopen_301_402.canopen_301.state import Can301State
 from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
 from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
+from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
 
 
 class CanOpenId():
@@ -51,13 +54,18 @@ class CanOpenId():
 
         return can_id        
 
-class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,can.Listener):
+class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
     """docstring for CanOpen"""
-    def __init__(self, bus):
+    def __init__(self, bus, eds_filename):
         super(CanOpen, self).__init__()
         self.bus = bus
 
+        self.eds = EdsFile()
+        self.eds.read(eds_filename)
+
         self.notifier = can.Notifier(self.bus,[self])
+
+        self.datatypes = CanDatatypes()
 
         self.response_callbacks = dict()
 
@@ -91,3 +99,9 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,can.Listener):
 
         elif function_code == CanFunctionCode.sdo_tx:
             self.process_sdo_tx_msg(msg, function_code, node_id, len_data)
+
+        elif function_code in [CanFunctionCode.pdo1_tx, CanFunctionCode.pdo2_tx, CanFunctionCode.pdo3_tx]:
+            self.process_pdo_tx_msg(msg, function_code, node_id, len_data)
+        elif function_code in [CanFunctionCode.pdo1_rx, CanFunctionCode.pdo2_rx, CanFunctionCode.pdo3_rx]:
+            self.process_pdo_rx_msg(msg, function_code, node_id, len_data)
+
