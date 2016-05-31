@@ -30,14 +30,14 @@ class EdsDeviceInfo(object):
         self.product_number = dictionary["ProductNumber"]
         self.revision_number = dictionary["RevisionNumber"]
         self.order_code = dictionary["OrderCode"]
-        self.baudrate_10 = dictionary["Baudrate_10"]
-        self.baudrate_20 = dictionary["Baudrate_20"]
-        self.baudrate_50 = dictionary["Baudrate_50"]
-        self.baudrate_125 = dictionary["Baudrate_125"]
-        self.baudrate_250 = dictionary["Baudrate_250"]
-        self.baudrate_500 = dictionary["Baudrate_500"]
-        self.baudrate_800 = dictionary["Baudrate_800"]
-        self.baudrate_1000 = dictionary["Baudrate_1000"]
+        self.baudrate_10 = dictionary["BaudRate_10"]
+        self.baudrate_20 = dictionary["BaudRate_20"]
+        self.baudrate_50 = dictionary["BaudRate_50"]
+        self.baudrate_125 = dictionary["BaudRate_125"]
+        self.baudrate_250 = dictionary["BaudRate_250"]
+        self.baudrate_500 = dictionary["BaudRate_500"]
+        self.baudrate_800 = dictionary["BaudRate_800"]
+        self.baudrate_1000 = dictionary["BaudRate_1000"]
         self.simple_boot_up_master = dictionary["SimpleBootUpMaster"]
         self.simple_boot_up_slave = dictionary["SimpleBootUpSlave"]
         self.granularity = dictionary["Granularity"]
@@ -49,9 +49,9 @@ class EdsDeviceInfo(object):
         self.lss_supported = dictionary["LSS_Supported"]
         
 class EdsDummyUsage(object):
-    """docstring for EdsDeviceInfo"""
+    """docstring for EdsDummyUsage"""
     def __init__(self, dictionary):
-        super(EdsDeviceInfo, self).__init__()
+        super(EdsDummyUsage, self).__init__()
         # todo figure out semantics
         self.dummy0001 = dictionary["Dummy0001"]
         self.dummy0002 = dictionary["Dummy0002"]
@@ -62,15 +62,16 @@ class EdsDummyUsage(object):
         self.dummy0007 = dictionary["Dummy0007"]
 
 class EdsComments(object):
-    """docstring for EdsDeviceInfo"""
+    """docstring for EdsComments"""
     def __init__(self, dictionary):
-        super(EdsDeviceInfo, self).__init__()
+        super(EdsComments, self).__init__()
         self.n_lines = int(dictionary["Lines"])
         self.lines = list()
         for k in range(1,self.n_lines+1):
             self.lines.append(dictionary["Line"+str(k)])
 
 def parseIntAutoBase(string):
+    if string is None: return None
     if string[:2] == "0x":
         base = 16
     elif string[:2] == "0b":
@@ -81,10 +82,16 @@ def parseIntAutoBase(string):
 
 class EdsObject(object):
     """docstring for EdsObject"""
-    def __init__(self, config_parser, object_id):
+    def __init__(self, config_parser, index, subindex = None):
         super(EdsObject, self).__init__()
-        section = hex(object_id)[2:] # hex number without '0x' prefix
-        dictionary = dict(self.config_parser.items(section))
+        object_id_str = str.upper(hex(index)[2:])
+        if subindex is not None:
+            object_id_str += "sub" + str.upper(hex(subindex)[2:])
+            
+        dictionary = get_section(config_parser,object_id_str)
+
+        self.index = index
+        self.subindex = subindex
         
         self.parameter_name=dictionary["ParameterName"]
         self.object_type=parseIntAutoBase(dictionary["ObjectType"])
@@ -93,12 +100,13 @@ class EdsObject(object):
             # var type
             self.data_type=parseIntAutoBase(dictionary["DataType"])
             self.access_type=dictionary["AccessType"]
-            self.default_value=parseIntAutoBase(dictionary["DefaultValue"])
+            self.default_value=dictionary["DefaultValue"]
             self.low_limit=parseIntAutoBase(dictionary["LowLimit"])
             self.high_limit=parseIntAutoBase(dictionary["HighLimit"])
             self.pdo_mapping=dictionary["PDOMapping"] == "1"
 
         elif self.object_type in [0x8,0x9]: 
+            assert self.subindex is None # no deep hierarchy
             # array or record type
 
             # determine number of sub objects
@@ -106,18 +114,16 @@ class EdsObject(object):
             self.sub_objects = list()
 
             # read sub objects
-            for subindex in range(0,self.sub_number):
-                subobj_id = section + "sub" + hex(subindex)[2:]
-                self.sub_objects.append(EdsObject(config_parser, subobj_id))
+            for k in range(0,self.sub_number):
+                self.sub_objects.append(EdsObject(config_parser, self.index, k))
 
 class EdsObjectList(object):
-    """docstring for EdsDeviceInfo"""
+    """docstring for EdsObjectList"""
     def __init__(self, config_parser, section):
-        super(EdsDeviceInfo, self).__init__()
-        self.config_parser = config_parser
+        super(EdsObjectList, self).__init__()
 
         # get section from eds file
-        dictionary = dict(self.config_parser.items(section))
+        dictionary = get_section(config_parser,section)
 
         # retrieve number of objects and then read objects
         self.num_objects = int(dictionary["SupportedObjects"])
@@ -128,8 +134,10 @@ class EdsObjectList(object):
         for k in range(1,self.num_objects+1):
             object_id = parseIntAutoBase(dictionary[str(k)])
             self.object_ids.append(object_id)
-            self.objects[object_id] = EdsObject(self.config_parser,object_id)
+            self.objects[object_id] = EdsObject(config_parser,object_id)
 
+def get_section(config_parser,section):
+    return defaultdict(lambda:None,dict(config_parser.items(section)))
 
 class EdsFile(object):
     def __init__(self):
@@ -139,7 +147,8 @@ class EdsFile(object):
         '''
 
         super(EdsFile, self).__init__()
-        self.config_parser = RawConfigParser(dict_type=defaultdict(lambda:None))
+        self.config_parser = RawConfigParser()
+        self.config_parser.optionxform = str # disable to lower case conversion of option names
 
         self.file_info = None
         self.device_info = None
@@ -157,14 +166,19 @@ class EdsFile(object):
 
         self.config_parser.read(filename)
 
-        self.file_info = EdsFileInfo(dict(self.config_parser.items("FileInfo")))
-        self.device_info = EdsDeviceInfo(dict(self.config_parser.items("DeviceInfo")))
-        self.dummy_usage = EdsDummyUsage(dict(self.config_parser.items("DummyUsage")))
-        self.comments = EdsComments(dict(self.config_parser.items("Comments")))
-        self.mandatory_objects = EdsObjectList(dict(self.config_parser.items("MandatoryObjects")))
-        self.optional_objects = EdsObjectList(dict(self.config_parser.items("OptionalObjects")))
+
+
+        self.file_info = EdsFileInfo(get_section(self.config_parser,"FileInfo"))
+        self.device_info = EdsDeviceInfo(get_section(self.config_parser,"DeviceInfo"))
+        self.dummy_usage = EdsDummyUsage(get_section(self.config_parser,"DummyUsage"))
+        self.comments = EdsComments(get_section(self.config_parser,"Comments"))
+        self.mandatory_objects = EdsObjectList(self.config_parser,"MandatoryObjects")
+        self.optional_objects = EdsObjectList(self.config_parser,"OptionalObjects")
 
 
     # def write(self, filename):
     #     with open(filename, 'wb') as configfile:
     #         self.config_parser.write(configfile)
+
+
+# __all__ = [EdsFileInfo,EdsDeviceInfo,EdsDummyUsage,EdsComments,EdsObject,EdsObjectList,EdsFile]
