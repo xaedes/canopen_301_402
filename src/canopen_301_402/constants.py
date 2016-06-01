@@ -17,7 +17,23 @@ class CanFunctionCode(object): # todo better name, Kommunikation_DE_7000_00030.P
     pdo4_rx = 0b1010
     sdo_tx = 0b1011
     sdo_rx = 0b1100
-    nmt_error_control = 0b1110   
+    nmt_error_control = 0b1110
+
+class CanOpenService(Enum):
+    nmt  = 0
+    sync = 1
+    emergency = 2
+    pdo1_tx = 3
+    pdo1_rx = 4
+    pdo2_tx = 5
+    pdo2_rx = 6
+    pdo3_tx = 7
+    pdo3_rx = 8
+    pdo4_tx = 9
+    pdo4_rx = 10
+    sdo_tx = 11
+    sdo_rx = 12
+    nmt_error_control = 13
 
 class CanData(Enum): # todo better name
     sdo_upload_request = 0x40        # 0b 0100 0000
