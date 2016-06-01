@@ -50,6 +50,10 @@ class Can301StateCommand(Enum):
     reset_node = 0x81
     reset_communication = 0x82
 
+class Can402StateCommand(Enum):
+    # todo
+    pass
+
 # Kommunikation DE_7000_00030.PDF pg. 64
 # https://github.com/rscada/libcanopen/blob/master/canopen/canopen.c
 CanErrors = dict({
