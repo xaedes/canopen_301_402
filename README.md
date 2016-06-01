@@ -24,6 +24,7 @@ Todo:
 Not that important todos:
  - respect inhibit times
  - datatypes in object dictionary (301_v04020005_cor3.pdf pg. 88)
+ - sdo block transfer
  - specific connection-set 
    - initialized with generic pre-defined connection set
    - overwrite standards with balues in eds file
