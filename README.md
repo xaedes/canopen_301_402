@@ -34,28 +34,31 @@ Not that important todos:
  - datatypes in object dictionary (301_v04020005_cor3.pdf pg. 88)
 
 ideas from other implementations:
+
     https://github.com/rscada/libcanopen/blob/master/python/pycanopen/CANopen.py
+
         read canopen frame:
-                def read_can_frame(self):
-                    """
-                    Low-level function: Read a CAN frame from socket.
-                    """
-                    if self.sock:
-                        can_frame = CANFrame()
-                        if libc.read(self.sock, byref(can_frame), c_int(16)) != 16:
-                            raise Exception("CAN frame read error")
-                        return can_frame
-                    else:
-                        raise Exception("CAN fram read error: socket not connected")
-                        
-                def parse_can_frame(self, can_frame):
-                    """
-                    Low level function: Parse a given CAN frame into CANopen frame
-                    """
-                    canopen_frame = CANopenFrame()        
-                    if libcanopen.canopen_frame_parse(byref(canopen_frame), byref(can_frame)) == 0:
-                        return canopen_frame
-                    else:
-                        raise Exception("CANopen Frame parse error")
+
+            def read_can_frame(self):
+                """
+                Low-level function: Read a CAN frame from socket.
+                """
+                if self.sock:
+                    can_frame = CANFrame()
+                    if libc.read(self.sock, byref(can_frame), c_int(16)) != 16:
+                        raise Exception("CAN frame read error")
+                    return can_frame
+                else:
+                    raise Exception("CAN fram read error: socket not connected")
+                    
+            def parse_can_frame(self, can_frame):
+                """
+                Low level function: Parse a given CAN frame into CANopen frame
+                """
+                canopen_frame = CANopenFrame()        
+                if libcanopen.canopen_frame_parse(byref(canopen_frame), byref(can_frame)) == 0:
+                    return canopen_frame
+                else:
+                    raise Exception("CANopen Frame parse error")
 
         print canopen frame in human readable form (we can use EDS file for this)
