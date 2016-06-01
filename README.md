@@ -23,7 +23,7 @@ Todo:
 
 
 Not that important todos:
- - respect inhibit times
+ - respect inhibit times (specified as multiples of 100 microsec)
  - local object dictionary prepopulated with can standard defaults
    - could be used to implement a can master (device)
  - datatypes in object dictionary (301_v04020005_cor3.pdf pg. 88)
