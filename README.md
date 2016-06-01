@@ -2,7 +2,7 @@
 Implementation of necessary subset of CanOpen 2.a to control Faulhaber Motion Controller.
 
 Implemented Features:
- - Network Management (controllling the Can301 State Machine)
+ - Network Management (controlling the Can301 State Machine)
  - SDO expedited transfer
  - EDS file loading
  - PDO transfer
@@ -10,7 +10,7 @@ Implemented Features:
  - generic pre-defined connection set (301_v04020005_cor3.pdf pg. 86)
 
 Todo:
- - PDO mapping (301_v04020005_cor3.pdf pg. 93; 135)
+ - PDO mapping (301_v04020005_cor3.pdf pg. 93; 135; 139 for transmission type)
  - complete object dictionary dump and restore
  - Sync Message (to trigger pdo)
  - use contents in EDS file (but how o0)
@@ -19,11 +19,16 @@ Todo:
    - 402 StateMachine
    - Read available Motion Profiles
    - Set Motion Profile
+ 
 
 
 Not that important todos:
  - respect inhibit times
+ - local object dictionary prepopulated with can standard defaults
+   - could be used to implement a can master (device)
  - datatypes in object dictionary (301_v04020005_cor3.pdf pg. 88)
+ - datatype coding with datatype info in object dictionary
+
  - sdo block transfer
  - specific connection-set 
    - initialized with generic pre-defined connection set
@@ -33,6 +38,7 @@ Not that important todos:
    - this class shall also be responsible for interpreting can frames into canopen frames
    - for canopen frames we need an enum for services (nmt, sync, pdo, etc.) that does not 
       represent the function code directly (as this can be changed)
+
 
 ideas from other implementations:
 
