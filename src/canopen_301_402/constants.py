@@ -33,11 +33,18 @@ class Can301StateCommand(Enum):
     reset_communication = 0x82
 
 # Kommunikation DE_7000_00030.PDF pg. 64
+# https://github.com/rscada/libcanopen/blob/master/canopen/canopen.c
 CanErrors = dict({
         0x05030000: "toggle bit not changed",
-        0x05040001: "SDO command specifier not valid",
+        0x05040000: "sdo protocol timed out",
+        0x05040001: "sdo command specifier not valid",
+        0x05040002: "invalid block size (block transfer mode only)",
+        0x05040003: "invalid sequence number (block transfer mode only)",
+        0x05040004: "crc error (block transfer mode only)",
+        0x05040005: "out of memory",
         0x06010000: "access to this object not supported",
-        0x06010002: "try to write to read-only property",
+        0x06010001: "try to read a write-only object",
+        0x06010002: "try to write to read-only object",
         0x06020000: "object not existing in object dictionary",
         0x06040041: "object can not be mapped in PDO",
         0x06040042: "number and/or length of mapped objects would exceed PDO length",
@@ -51,9 +58,13 @@ CanErrors = dict({
         0x06090030: "general domain error",
         0x06090031: "domain error: parameter value to big",
         0x06090032: "domain error: parameter value to small",
+        0x06090036: "maximum value is less then minimum value",
         0x060A0023: "resource not available",
+        0x08000000: "general error",
+        0x08000020: "access not available",
         0x08000021: "access not available due to local application",
         0x08000022: "access not available due to current device state",
+        0x08000023: "object dictionary dynamic generation fails or no object dictionary is present (e.g. OD is generated from file and generation fails because of a file error)",
         "unknown":  "Unknown error code: %s"
     })
 
