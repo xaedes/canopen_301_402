@@ -30,6 +30,11 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can
 
         self.response_callbacks = dict()
 
+        self.services = dict()
+        # todo populate self.services with service for each CanOpenService
+        # service should be something that can process CanOpenMessage
+
+
     def send_can(self, can_id, data):
         '''
         @summary: send message with data to 11 bit can_id 
@@ -57,6 +62,10 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can
         print msg
 
         msg = CanOpenMessage.from_can_msg(msg)
+
+        # determine service from msg, or service should be part of canopenmessage
+        service = CanOpenService.nmt # stub; see line above
+        self.services[service].on_message_received(msg)
 
         len_data = len(msg.data) 
         
