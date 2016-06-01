@@ -90,7 +90,7 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can
             # canopen 2.a expects 11bit identifiers
             raise NotImplemented
 
-        function_code, node_id = self.decode_can_open_id(msg.arbitration_id)
+        function_code, node_id = CanOpenId.decode(msg.arbitration_id)
 
         len_data = len(msg.data) 
         
