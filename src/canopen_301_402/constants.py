@@ -13,6 +13,8 @@ class CanFunctionCode(object): # todo better name, Kommunikation_DE_7000_00030.P
     pdo2_rx = 0b0110
     pdo3_tx = 0b0111
     pdo3_rx = 0b1000
+    pdo4_tx = 0b1001
+    pdo4_rx = 0b1010
     sdo_tx = 0b1011
     sdo_rx = 0b1100
     nmt_error_control = 0b1110   
