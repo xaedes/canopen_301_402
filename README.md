@@ -14,14 +14,6 @@ Todo:
  - complete object dictionary dump and restore
  - Sync Message (to trigger pdo)
  - use contents in EDS file (but how o0)
- - specific connection-set 
-   - initialized with generic pre-defined connection set
-   - overwrite standards with balues in eds file
-   - respect restricted CAN-IDs  (301_v04020005_cor3.pdf pg. 87)
-   - we need a connection set class for this that manages this
-   - this class shall also be responsible for interpreting can frames into canopen frames
-   - for canopen frames we need an enum for services (nmt, sync, pdo, etc.) that does not 
-      represent the function code directly (as this can be changed)
 
  - 402:
    - 402 StateMachine
@@ -32,6 +24,14 @@ Todo:
 Not that important todos:
  - respect inhibit times
  - datatypes in object dictionary (301_v04020005_cor3.pdf pg. 88)
+ - specific connection-set 
+   - initialized with generic pre-defined connection set
+   - overwrite standards with balues in eds file
+   - respect restricted CAN-IDs  (301_v04020005_cor3.pdf pg. 87)
+   - we need a connection set class for this that manages this
+   - this class shall also be responsible for interpreting can frames into canopen frames
+   - for canopen frames we need an enum for services (nmt, sync, pdo, etc.) that does not 
+      represent the function code directly (as this can be changed)
 
 ideas from other implementations:
 
