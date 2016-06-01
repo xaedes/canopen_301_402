@@ -13,10 +13,22 @@ class CanOpenPdoTransfer(object):
     def __init__(self, *args, **kwargs):
         super(CanOpenPdoTransfer, self).__init__(*args, **kwargs)
 
-        self.pdo_callbacks = dict({1:None,2:None,3:None})
-        self.pdo_datatypes = dict({1:0x0006,2:0x0006,3:0x0006})
+        # callbacks that will be called when new pdo msgs arrive
+        self.pdo_callbacks = dict({1:None,2:None,3:None,4:None})
+
+        # these datatypes are used to decode the can message data
+        self.pdo_datatypes = dict({1:0x0006,2:0x0006,3:0x0006,4:0x0006})
+
+    def setup_pdo_from_eds(self):
+        # todo: use eds info to populate self.pdo_datatypes
+        pass
+
+    def setup_pdo_from_object_dictionary(self):
+        # todo: use sdo access to object dictionary to populate self.pdo_datatypes
+        pass
 
     def process_pdo_tx_msg(self, msg, function_code, node_id, len_data):
+        # message coming from remote device (tx is named from the devices perspective)
         if function_code == CanFunctionCode.pdo1_tx:
             pdo_number = 1
         elif function_code == CanFunctionCode.pdo2_tx:
