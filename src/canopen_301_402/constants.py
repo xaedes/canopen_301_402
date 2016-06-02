@@ -3,56 +3,116 @@
 
 from flufl.enum import Enum
 
-class CanFunctionCode(object): # todo better name, Kommunikation_DE_7000_00030.PDF pg. 69
-    nmt  = 0b0000 # node_id must be 0
-    sync = 0b0001 # node_id must be 0
-    emergency = 0b0001
-    pdo1_tx = 0b0011
-    pdo1_rx = 0b0100
-    pdo2_tx = 0b0101
-    pdo2_rx = 0b0110
-    pdo3_tx = 0b0111
-    pdo3_rx = 0b1000
-    pdo4_tx = 0b1001
-    pdo4_rx = 0b1010
-    sdo_tx = 0b1011
-    sdo_rx = 0b1100
-    nmt_error_control = 0b1110
+# class CanFunctionCode(object): # todo better name, Kommunikation_DE_7000_00030.PDF pg. 69
+#     nmt  = 0b0000 # node_id must be 0
+#     sync = 0b0001 # node_id must be 0
+#     emergency = 0b0001
+#     pdo1_tx = 0b0011
+#     pdo1_rx = 0b0100
+#     pdo2_tx = 0b0101
+#     pdo2_rx = 0b0110
+#     pdo3_tx = 0b0111
+#     pdo3_rx = 0b1000
+#     pdo4_tx = 0b1001
+#     pdo4_rx = 0b1010
+#     sdo_tx = 0b1011
+#     sdo_rx = 0b1100
+#     nmt_error_control = 0b1110
 
 class CanOpenService(Enum):
-    nmt  = 0
-    sync = 1
-    emergency = 2
-    pdo1_tx = 3
-    pdo1_rx = 4
-    pdo2_tx = 5
-    pdo2_rx = 6
-    pdo3_tx = 7
-    pdo3_rx = 8
-    pdo4_tx = 9
-    pdo4_rx = 10
-    sdo_tx = 11
-    sdo_rx = 12
+    nmt               = 0
+    sync              = 1
+    emergency         = 2
+    pdo1_tx           = 3
+    pdo1_rx           = 4
+    pdo2_tx           = 5
+    pdo2_rx           = 6
+    pdo3_tx           = 7
+    pdo3_rx           = 8
+    pdo4_tx           = 9
+    pdo4_rx           = 10
+    sdo_tx            = 11
+    sdo_rx            = 12
     nmt_error_control = 13
 
-class CanData(Enum): # todo better name
-    sdo_upload_request = 0x40        # 0b 0100 0000
-    sdo_upload_response = 0x43       # 0b 0100 0011
+CanOpenPredefinedConnectionSet = dict({
+    CanOpenService.nmt:               0b0000,
+    CanOpenService.sync:              0b0001,
+    CanOpenService.emergency:         0b0001,
+    CanOpenService.pdo1_tx:           0b0011,
+    CanOpenService.pdo1_rx:           0b0100,
+    CanOpenService.pdo2_tx:           0b0101,
+    CanOpenService.pdo2_rx:           0b0110,
+    CanOpenService.pdo3_tx:           0b0111,
+    CanOpenService.pdo3_rx:           0b1000,
+    CanOpenService.pdo4_tx:           0b1001,
+    CanOpenService.pdo4_rx:           0b1010,
+    CanOpenService.sdo_tx:            0b1011,
+    CanOpenService.sdo_rx:            0b1100,
+    CanOpenService.nmt_error_control: 0b1110
+    })
+
+class CanData(object): # todo better name
+    sdo_upload_request        = 0x40 # 0b 0100 0000
+    sdo_upload_response       = 0x43 # 0b 0100 0011
     sdo_download_request_bits = 0x23 # 0b 0010 0011 
-    sdo_download_response = 0x60     # 0b 0110 0000 
-    sdo_error = 0x80
+    sdo_download_response     = 0x60 # 0b 0110 0000 
+    sdo_error                 = 0x80
 
 
 class Can301StateCommand(Enum):
-    start_remote_node = 0x01
-    enter_pre_operational = 0x80
-    stop_remote_node = 0x02
-    reset_node = 0x81
-    reset_communication = 0x82
+    start_remote_node     = 0
+    enter_pre_operational = 1
+    stop_remote_node      = 2
+    reset_node            = 3
+    reset_communication   = 4
+
+Can301StateCommandBits = dict({
+    Can301StateCommand.start_remote_node:     0x01,
+    Can301StateCommand.enter_pre_operational: 0x80,
+    Can301StateCommand.stop_remote_node:      0x02,
+    Can301StateCommand.reset_node:            0x81,
+    Can301StateCommand.reset_communication:   0x82,
+    })
+
+class Can301StateCommandBits(object):
 
 class Can402StateCommand(Enum):
-    # todo
-    pass
+    shutdown          = 0 # 2,6,8
+    switch_on         = 1 # 3
+    disable_voltage   = 2 # 7,9,10,12
+    quick_stop        = 3 # 7,10,11
+    disable_operation = 4 # 5
+    enable_operation  = 5 # 4,16
+    fault_reset       = 6 # 15
+
+'''
+@summary: Bits to be set in controlword; masked with Can402StateCommandMask
+'''
+Can402StateCommandBits = dict({
+    Can402StateCommand.shutdown          = 0b0110,
+    Can402StateCommand.switch_on         = 0b0111,
+    Can402StateCommand.disable_voltage   = 0b0000,
+    Can402StateCommand.quick_stop        = 0b0010,
+    Can402StateCommand.disable_operation = 0b0111, 
+    Can402StateCommand.enable_operation  = 0b1111,
+    # normally we only change the 4 lowest bits, but for fault reset
+    # we need to set the 8th bit
+    Can402StateCommand.fault_reset       = 0b10000000 
+    })
+
+Can402StateCommandMask = dict({
+    Can402StateCommand.shutdown          = 0b0111 
+    Can402StateCommand.switch_on         = 0b1111
+    Can402StateCommand.disable_voltage   = 0b0010
+    Can402StateCommand.quick_stop        = 0b0110
+    Can402StateCommand.disable_operation = 0b1111
+    Can402StateCommand.enable_operation  = 0b1111
+    # normally we only change the 4 lowest bits, but for fault reset
+    # we need to set the 8th bit
+    Can402StateCommand.fault_reset       = 0b10000000
+    })
+
 
 # Kommunikation DE_7000_00030.PDF pg. 64
 # https://github.com/rscada/libcanopen/blob/master/canopen/canopen.c

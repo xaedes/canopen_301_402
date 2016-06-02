@@ -13,27 +13,48 @@ from canopen_301_402.canopen_301.state import Can301State
 from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
 from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
 from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
+from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
 
-class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
+class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
     """docstring for CanOpen"""
     def __init__(self, bus, eds_filename):
         super(CanOpen, self).__init__()
         self.bus = bus
+        self.notifier = can.Notifier(self.bus,[self])
 
+        # load eds file containing application specific profile
         self.eds = EdsFile()
         self.eds.read(eds_filename)
 
-        self.notifier = can.Notifier(self.bus,[self])
+
+        # set up predefined connection set, mapping canopen services to function codes
+        self.connection_set = ConnectionSet()
+        self.connection_set.setup_from_eds(self.eds)
 
         self.datatypes = CanDatatypes()
 
-        self.response_callbacks = dict()
+        # initialize services
+        self.nmt = CanOpenNetworkManagement(self)
+        self.sdo = CanOpenSdoTransfer(self)
+        self.pdo = CanOpenPdoTransfer(self)
 
+        # setup routing to services
         self.services = dict()
-        # todo populate self.services with service for each CanOpenService
-        # service should be something that can process CanOpenMessage
-
+        self.services[CanOpenService.nmt] = self.nmt.process_msg
+        self.services[CanOpenService.nmt_error_control] = self.nmt.process_msg
+        self.services[CanOpenService.sdo_tx] = self.sdo.process_msg
+        self.services[CanOpenService.sdo_rx] = self.sdo.process_msg
+        self.services[CanOpenService.pdo1_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo1_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo2_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo2_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo3_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo3_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo4_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo4_rx] = self.pdo.process_msg
+        self.services[CanOpenService.sync] = None # todo
+        self.services[CanOpenService.emergency] = None # todo
 
     def send_can(self, can_id, data):
         '''
@@ -61,24 +82,27 @@ class CanOpen(CanOpenNetworkManagement,CanOpenSdoTransfer,CanOpenPdoTransfer,can
     def on_message_received(self, msg):
         print msg
 
-        msg = CanOpenMessage.from_can_msg(msg)
+        # convert message to canopen message
+        msg = CanOpenMessage.from_can_msg(msg, self.connection_set)
 
-        # determine service from msg, or service should be part of canopenmessage
-        service = CanOpenService.nmt # stub; see line above
-        self.services[service].on_message_received(msg)
+        # route canopen message to responsible service
+        service = self.services[msg.service]
 
-        len_data = len(msg.data) 
+        if callable(service):
+            service(msg)
+
+        # len_data = len(msg.data) 
         
         # todo: replace this if construct by some kind of array lookup
-        if msg.function_code == CanFunctionCode.nmt_error_control:
-            self.process_nmt_error_control_msg(msg, msg.function_code, msg.node_id, len_data)
+        # if msg.function_code == CanFunctionCode.nmt_error_control:
+        #     self.process_nmt_error_control_msg(msg, msg.function_code, msg.node_id, len_data)
 
-        elif msg.function_code == CanFunctionCode.sdo_tx:
-            self.process_sdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
+        # elif msg.function_code == CanFunctionCode.sdo_tx:
+        #     self.process_sdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
 
-        elif msg.function_code in [CanFunctionCode.pdo1_tx, CanFunctionCode.pdo2_tx, CanFunctionCode.pdo3_tx]:
-            self.process_pdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
+        # elif msg.function_code in [CanFunctionCode.pdo1_tx, CanFunctionCode.pdo2_tx, CanFunctionCode.pdo3_tx]:
+        #     self.process_pdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
 
-        elif msg.function_code in [CanFunctionCode.pdo1_rx, CanFunctionCode.pdo2_rx, CanFunctionCode.pdo3_rx]:
-            self.process_pdo_rx_msg(msg, msg.function_code, msg.node_id, len_data)
+        # elif msg.function_code in [CanFunctionCode.pdo1_rx, CanFunctionCode.pdo2_rx, CanFunctionCode.pdo3_rx]:
+        #     self.process_pdo_rx_msg(msg, msg.function_code, msg.node_id, len_data)
 

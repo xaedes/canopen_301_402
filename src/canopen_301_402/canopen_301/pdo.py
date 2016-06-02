@@ -5,8 +5,9 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
+from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
 
-class CanOpenPdoTransfer(object):
+class CanOpenPdoTransfer(CanOpenServiceBaseClass):
     '''
     @summary: for use as cooperative base class in CanOpen
     '''
@@ -25,6 +26,10 @@ class CanOpenPdoTransfer(object):
 
     def setup_pdo_from_object_dictionary(self):
         # todo: use sdo access to object dictionary to populate self.pdo_datatypes
+        pass
+
+    def process_msg(self, msg):
+        # todo
         pass
 
     def process_pdo_tx_msg(self, msg, function_code, node_id, len_data):

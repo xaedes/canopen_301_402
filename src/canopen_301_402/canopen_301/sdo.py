@@ -5,14 +5,16 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
+from canopen_301_402.canopen_301.msg import CanOpenMessage
+from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
 
-class CanOpenSdoTransfer(object):
+class CanOpenSdoTransfer(CanOpenServiceBaseClass):
     '''
     @summary: for use as cooperative base class in CanOpen
     '''
     def __init__(self, *args, **kwargs):
         super(CanOpenSdoTransfer, self).__init__(*args, **kwargs)
-
+        self.response_callbacks = dict()
 
     def send_sdo_write_request(self, node_id, index, subindex, data, response_callback):
         '''
@@ -29,24 +31,31 @@ class CanOpenSdoTransfer(object):
         Assertions.assert_subindex(subindex)
         Assertions.assert_data(data,maximum_len=4)
         
-        can_id = CanOpenId.encode(CanFunctionCode.sdo_rx, node_id)
         len_data = len(data)
 
         if len_data == 0:
             # Falls keine Angabe der Anzahl Datenbytes erforderlich ist: Byte0 = 0x22
             sdo_download_request = CanData.sdo_download_request_bits - 1
         else:
+            # encode number of data bytes to be written
             sdo_download_request = ((4-len_data)<<2) | CanData.sdo_download_request_bits
         
-        data = [sdo_download_request,
-                (index & 0xff), 
-                (index>>8), 
-                subindex] + data
+        data = [sdo_download_request, # specifies, that we want to write value to object dictionary
+                (index & 0xff),       # index low byte
+                (index>>8),           # index high byte
+                subindex]             # 8 bit subindex
+                + data                # data to be written
 
+        # store callback that shall be called when can device reponses to our write request
         key = ("sdo_write", node_id, index, subindex)
         self.response_callbacks[key] = response_callback
+        
+        # send canopen message
+        service = CanOpenService.sdo_rx
+        function_code = self.canopen.connection_set.determine_function_code(service)
+        msg = CanOpenMessage(function_code,node_id,service,data)
 
-        self.send_can(can_id, data)
+        self.canopen.send_msg(msg)
 
 
     def send_sdo_read_request(self, node_id, index, subindex, response_callback):
@@ -61,20 +70,31 @@ class CanOpenSdoTransfer(object):
         Assertions.assert_node_id(node_id)
         Assertions.assert_index(index)
         Assertions.assert_subindex(subindex)
-        can_id = CanOpenId.encode(CanFunctionCode.sdo_rx, node_id)
-        data = [CanData.sdo_upload_request,
-                (index & 0xff), 
-                (index>>8), 
-                subindex]
 
+        data = [CanData.sdo_upload_request, # specifies, that we want to read value from object dictionary
+                (index & 0xff),             # index low byte
+                (index >> 8),               # index high byte
+                subindex]                   # 8 bit subindex
+
+        # store callback that shall be called when can device reponses to our read request
         key = ("sdo_read", node_id, index, subindex)
         self.response_callbacks[key] = response_callback
 
-        self.send_can(can_id, data)
+        # send canopen message
+        service = CanOpenService.sdo_rx
+        function_code = self.canopen.connection_set.determine_function_code(service)
+        msg = CanOpenMessage(function_code,node_id,service,data)
 
-    def process_sdo_tx_msg(self, msg, function_code, node_id, len_data):
+        self.canopen.send_msg(msg)
+
+
+    def process_msg(self, msg):
         # sdo response
-        if len_data == 8:
+        if msg.service == CanOpenService.sdo_tx: 
+            
+            # todo replace with softer error
+            assert len(msg.data) == 8
+
             index = msg.data[1] | (msg.data[2] << 8)
             subindex = msg.data[3]
 
