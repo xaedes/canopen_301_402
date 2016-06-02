@@ -5,6 +5,9 @@ from collections import defaultdict
 from ConfigParser import RawConfigParser
 from flufl.enum import Enum
 
+from canopen_301_402.utils import parseIntAutoBase
+
+
 class EdsFileInfo(object):
     """docstring for EdsFileInfo"""
     def __init__(self, dictionary):
@@ -71,15 +74,6 @@ class EdsComments(object):
         for k in range(1,self.n_lines+1):
             self.lines.append(dictionary["Line"+str(k)])
 
-def parseIntAutoBase(string):
-    if string is None: return None
-    if string[:2] == "0x":
-        base = 16
-    elif string[:2] == "0b":
-        base = 2
-    else:
-        base = 10
-    return int(string,base)
 
 class EdsObjectAttribute(Enum):
     #301_v04020005_cor3.pdf pg. 90 

@@ -4,6 +4,9 @@
 import struct
 
 from canopen_301_402.utils import collect_all_leaf_subclasses
+from canopen_301_402.utils import parseIntAutoBase
+
+from canopen_301_402.constants import CanOpenBasicDatatypes
 
 class CanDatatype(object):
     '''
@@ -33,7 +36,7 @@ class CanDatatype(object):
     @classmethod
     def decode(cls, data):
         '''
-        @summary: returns decoded data
+        @summary: returns value of decoded data
         @param cls:
         @param data: byte array
         @result: value
@@ -47,6 +50,26 @@ class CanDatatype(object):
         @param cls:
         @param value: value to be encoded
         @result: data byte array
+        '''
+        raise NotImplemented
+
+    @classmethod
+    def decode_string(cls, string):
+        '''
+        @summary: returns value of human readable representation
+        @param cls:
+        @param string: human readable representation of value as string
+        @result: value
+        '''
+        raise NotImplemented
+
+    @classmethod
+    def encode_string(cls, value):
+        '''
+        @summary: returns human readable representation
+        @param cls:
+        @param value: value to be encoded
+        @result: human readable representation of value as string
         '''
         raise NotImplemented
 
@@ -71,6 +94,15 @@ class CanDatatypeStruct(CanDatatype):
     def encode(cls, value):
         struct.pack(cls.data_format, value)
 
+    @classmethod
+    def decode_string(cls, string):
+        # default implementation tries to interprete as integer number
+        return parseIntAutoBase(string)
+
+    @classmethod
+    def encode_string(cls, value):
+        return str(value)
+
 class CanDatatypeBoolean(CanDatatypeStruct):
     # '<' little endian
     # '?' bool
@@ -78,12 +110,21 @@ class CanDatatypeBoolean(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0001
+        return CanOpenBasicDatatypes.boolean
 
     @classmethod
     def number_of_bits(cls):
         return 1
 
+    @classmethod
+    def decode_string(cls, string):
+        # default implementation tries to interprete as integer number
+        num_value = parseIntAutoBase(string)
+        
+        if num_value is None:
+            return None
+        else:
+            return num_value != 0 # c interpretation of bool
 
 class CanDatatypeInt8(CanDatatypeStruct):
     # '<' little endian
@@ -92,7 +133,7 @@ class CanDatatypeInt8(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0002
+        return CanOpenBasicDatatypes.int8
 
     @classmethod
     def number_of_bits(cls):
@@ -107,7 +148,7 @@ class CanDatatypeInt16(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0003
+        return CanOpenBasicDatatypes.int16
 
     @classmethod
     def number_of_bits(cls):
@@ -120,7 +161,7 @@ class CanDatatypeInt32(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0004
+        return CanOpenBasicDatatypes.int32
 
     @classmethod
     def number_of_bits(cls):
@@ -133,7 +174,7 @@ class CanDatatypeUInt8(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0005
+        return CanOpenBasicDatatypes.uint8
 
     @classmethod
     def number_of_bits(cls):
@@ -146,7 +187,7 @@ class CanDatatypeUInt16(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0006
+        return CanOpenBasicDatatypes.uint16
 
     @classmethod
     def number_of_bits(cls):
@@ -159,7 +200,7 @@ class CanDatatypeUInt32(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0007
+        return CanOpenBasicDatatypes.uin32
 
     @classmethod
     def number_of_bits(cls):
@@ -172,11 +213,16 @@ class CanDatatypeFloat32(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return 0x0008
+        return CanOpenBasicDatatypes.float32
 
     @classmethod
     def number_of_bits(cls):
         return 32
+
+    @classmethod
+    def decode_string(cls, string):
+        num_value = float(string)
+        return num_value
 
 class CanDatatypes(object):
     def __init__(self):

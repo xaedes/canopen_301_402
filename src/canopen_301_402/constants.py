@@ -19,6 +19,17 @@ from flufl.enum import Enum
 #     sdo_rx = 0b1100
 #     nmt_error_control = 0b1110
 
+
+class CanOpenBasicDatatypes(Enum):
+    boolean = 0x0001
+    int8 = 0x0002
+    int16 = 0x0003
+    int32 = 0x0004
+    uint8 = 0x0005
+    uint16 = 0x0006
+    uint32 = 0x0007
+    float32 = 0x0008
+
 class CanOpenService(Enum):
     nmt               = 0
     sync              = 1
@@ -77,8 +88,6 @@ Can301StateCommandBits = dict({
     Can301StateCommand.reset_communication:   0x82,
     })
 
-class Can301StateCommandBits(object):
-
 class Can402StateCommand(Enum):
     shutdown          = 0 # 2,6,8
     switch_on         = 1 # 3
@@ -115,6 +124,9 @@ Can402StateCommandMask = dict({
     Can402StateCommand.fault_reset       = 0b10000000
     })
 
+class Can402Objects(object):
+    controlword = (0x6040,0x00)
+    statusword  = (0x6041,0x00)
 
 # Kommunikation DE_7000_00030.PDF pg. 64
 # https://github.com/rscada/libcanopen/blob/master/canopen/canopen.c

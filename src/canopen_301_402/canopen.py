@@ -1,10 +1,13 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
+
 import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
+from canopen_301_402.node import CanOpenNode
 from canopen_301_402.canopen_301.eds import *
 from canopen_301_402.canopen_301.cob import CanOpenId
 from canopen_301_402.canopen_301.msg import CanOpenMessage
@@ -32,7 +35,11 @@ class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
         self.connection_set = ConnectionSet()
         self.connection_set.setup_from_eds(self.eds)
 
+        # canopen datatypes
         self.datatypes = CanDatatypes()
+
+        # canopen nodes
+        self.nodes = defaultdict(lambda:None)
 
         # initialize services
         self.nmt = CanOpenNetworkManagement(self)
@@ -87,6 +94,10 @@ class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
 
         # route canopen message to responsible service
         service = self.services[msg.service]
+
+        # create CanOpenNode if not already present
+        if self.nodes[msg.node_id] is None:
+            self.nodes[msg.node_id] = CanOpenNode(self,msg.node_id)
 
         if callable(service):
             service(msg)

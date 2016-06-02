@@ -22,3 +22,25 @@ def collect_all_leaf_subclasses(Type):
         for subclass in subclasses:
             result.extend(collect_all_leaf_subclasses(subclass))
         return result
+
+def parseIntAutoBase(string):
+    if string is None: return None
+    string = string.strip()
+
+    # if it is a negative number the prefix starts after the minus sign
+    # use a variable offset where the prefix should start
+    if string[0] == "-":
+        offset = 1
+    else:
+        offset = 0
+
+    if string[offset:][:2] == "0x":
+        base = 16
+    elif string[offset:][:2] == "0o":
+        base = 8
+    elif string[offset:][:2] == "0b":
+        base = 2
+    else:
+        base = 10
+
+    return int(string,base)
