@@ -35,6 +35,8 @@ class CanOpenService(Enum):
     sdo_rx            = 12
     nmt_error_control = 13
 
+CanOpenBroadcastServices = [CanOpenService.nmt, CanOpenService.sync]
+
 CanOpenPredefinedConnectionSet = dict({
     CanOpenService.nmt:               0b0000,
     CanOpenService.sync:              0b0001,
