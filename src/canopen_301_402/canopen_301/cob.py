@@ -1,9 +1,11 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+
+
 from canopen_301_402.assertions import Assertions
 
-class CanOpenId():
+class CanOpenId(): 
     '''
     @summary: can open interpretation of can id:
         

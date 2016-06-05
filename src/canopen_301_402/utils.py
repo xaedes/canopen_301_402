@@ -1,6 +1,15 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+def set_timeout(timeout,callback):
+    '''
+    @summary: calls a function after a specified number of seconds
+    @param timeout: number of seconds
+    @param callback: function be called 
+    @result: 
+    '''
+    pass # TODO
+
 def collect_all_leaf_subclasses(Type):
     '''
     @summary: returns a list of classes that inherit from type and have no further inheriting subclasses

@@ -9,17 +9,69 @@ from canopen_301_402.canopen_301.state import Can301State
 from canopen_301_402.canopen_301.obj_dict import CanOpenObjectDictionary
 from canopen_301_402.canopen_402.state import Can402State
 
+from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
+from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
+from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
+from canopen_301_402.canopen_301.connection_set import ConnectionSet
+
+# class CanOpenNodeClient(object):
+#     """docstring for CanOpenNodeClient"""
+#     def __init__(self, node):
+#         super(CanOpenNodeClient, self).__init__()
+#         self.node = node
+#         self.canopen = node.canopen
+        
+
 class CanOpenNode(object):
-    def __init__(self, canopen, node_id):
+    def __init__(self, canopen, node_id, eds_filename=None):
         super(CanOpenNode, self).__init__()
         self.canopen = canopen
         self.node_id = node_id
-        self.state = Can301State.initialisation
-        self.state402 = Can402State.switch_on_disabled
+
+        # load eds file containing application specific profile
+        self.eds = EdsFile()
+        if eds_filename is not None:
+            self.eds.read(eds_filename)
+
+        # set up predefined connection set, mapping canopen services to function codes
+        self.connection_set = ConnectionSet()
+        self.connection_set.setup_from_eds(self.eds)
+
+        # initialize services
+        self.nmt = CanOpenNetworkManagement(self)
+        self.sdo = CanOpenSdoTransfer(self)
+        self.pdo = CanOpenPdoTransfer(self)
+
+        # object dictionary
         self.obj_dict = CanOpenObjectDictionary(self.canopen)
+
+        self.state301 = Can301State.initialisation
+        
+        self.state402 = Can402State.switch_on_disabled
+
+
+        # self.client = CanOpenNodeClient(self)
+        # todo self.master = CanOpenNodeMaster(self) 
+
         self.can402_supported = None # None means unknown, otherwise it is Boolean
         self.check_402()
-
+        
+        # setup routing to services
+        self.services = dict()
+        self.services[CanOpenService.nmt] = self.nmt.process_msg
+        self.services[CanOpenService.nmt_error_control] = self.nmt.process_msg
+        self.services[CanOpenService.sdo_tx] = self.sdo.process_msg
+        self.services[CanOpenService.sdo_rx] = self.sdo.process_msg
+        self.services[CanOpenService.pdo1_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo1_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo2_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo2_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo3_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo3_rx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo4_tx] = self.pdo.process_msg
+        self.services[CanOpenService.pdo4_rx] = self.pdo.process_msg
+        self.services[CanOpenService.sync] = None # todo
+        self.services[CanOpenService.emergency] = None # todo
 
 
     def send_nmt(self, command):
@@ -42,23 +94,23 @@ class CanOpenNode(object):
         '''
 
         def check_for_both():
-            if ((self.obj_dict.objects[(self.controlword_index, self.controlword_subindex)] == False)
-                or (self.obj_dict.objects[(self.statusword_index, self.statusword_subindex)] == False)):
+            if ((self.obj_dict.objects[(self.controlword_index, self.controlword_subindex)].value is None)
+                or (self.obj_dict.objects[(self.statusword_index, self.statusword_subindex)].value is None)):
                 self.can402_supported = False
-            elif ((type(self.obj_dict.objects[(self.controlword_index, self.controlword_subindex)]) == int)
-                or (type(self.obj_dict.objects[(self.statusword_index, self.statusword_subindex)]) == int)):
+            elif ((type(self.obj_dict.objects[(self.controlword_index, self.controlword_subindex)].value) == int)
+                or (type(self.obj_dict.objects[(self.statusword_index, self.statusword_subindex)].value) == int)):
                 self.can402_supported = True
             # otherwise one response may not yet have arrived
 
         def response(index, subindex, error,data=None):
             if error is None:
-                datatype = self.obj_dict.datatypes[(index, subindex)]
+                datatype = self.obj_dict.objects[(index, subindex)].datatype
                 if datatype is None:
                     # datatype not set?
                     raise RuntimeError()
-                self.obj_dict.objects[(index, subindex)] = datatype.decode(data)
+                self.obj_dict.objects[(index, subindex)].value = datatype.decode(data)
             else:
-                self.obj_dict.objects[(index, subindex)] = False
+                self.obj_dict.objects[(index, subindex)].value = None
             check_for_both()
                 
 

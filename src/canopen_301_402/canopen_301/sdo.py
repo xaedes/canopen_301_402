@@ -1,12 +1,65 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
+from funcy import partial
+
 import can
 
 from canopen_301_402.constants import *
+from canopen_301_402.signal import Signal
 from canopen_301_402.assertions import Assertions
 from canopen_301_402.canopen_301.msg import CanOpenMessage
 from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
+
+class SdoReadRequest(object):
+    """docstring for SdoReadRequest"""
+    def __init__(self, sdo, node_id, index, subindex):
+        Assertions.assert_node_id(node_id)
+        Assertions.assert_index(index)
+        Assertions.assert_subindex(subindex)
+        super(SdoReadRequest, self).__init__()
+        self.sdo = sdo
+        self.canopen = sdo.canopen
+        self.node_id = node_id
+        self.index = index
+        self.subindex = subindex
+
+        self.signal_success = Signal()
+        self.signal_error = Signal()
+
+    def _on_success(self, data):
+        self.signal_success.dispatch(self, data)
+
+    def _on_error(self, error):
+        self.signal_error.dispatch(self, error)
+
+class SdoWriteRequest(object):
+    """docstring for SdoWriteRequest"""
+    def __init__(self, sdo, node_id, index, subindex, data):
+        Assertions.assert_node_id(node_id)
+        Assertions.assert_index(index)
+        Assertions.assert_subindex(subindex)
+        Assertions.assert_data(data,maximum_len=4)
+        super(SdoReadRequest, self).__init__()
+        self.sdo = sdo
+        self.canopen = sdo.canopen
+        self.node_id = node_id
+        self.index = index
+        self.subindex = subindex
+        self.data = data
+
+        self.signal_success = Signal()
+        self.signal_error = Signal()
+
+
+
+    def _on_success(self):
+        self.signal_success.dispatch(self, self.data)
+
+    def _on_error(self, error):
+        self.signal_error.dispatch(self, error)
+
 
 class CanOpenSdoTransfer(CanOpenServiceBaseClass):
     '''
@@ -15,6 +68,13 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
     def __init__(self, *args, **kwargs):
         super(CanOpenSdoTransfer, self).__init__(*args, **kwargs)
         self.response_callbacks = dict()
+        self.signals_error = defaultdict(Signal)
+        self.signals_read_success = defaultdict(Signal)
+        self.signals_write_success = defaultdict(Signal)
+
+        self.pending_operations = list()
+        self.write_requests = defaultdict(list)
+        self.read_requests = defaultdict(list)
 
     def send_sdo_write_request(self, node_id, index, subindex, data, response_callback):
         '''
@@ -46,9 +106,9 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
                 subindex]             # 8 bit subindex
                 + data                # data to be written
 
-        # store callback that shall be called when can device reponses to our write request
-        key = ("sdo_write", node_id, index, subindex)
-        self.response_callbacks[key] = response_callback
+        # register callbacks to sdo response
+        self.signals_write_success[(node_id,index,subindex)].register_once(partial(response,error=None))
+        self.signals_error[(node_id,index,subindex)].register_once(response_callback)
         
         # send canopen message
         service = CanOpenService.sdo_rx
@@ -76,9 +136,9 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
                 (index >> 8),               # index high byte
                 subindex]                   # 8 bit subindex
 
-        # store callback that shall be called when can device reponses to our read request
-        key = ("sdo_read", node_id, index, subindex)
-        self.response_callbacks[key] = response_callback
+        # register callbacks to sdo response
+        self.signals_read_success[(index,subindex)].register_once(partial(response,error=None))
+        self.signals_error[(index,subindex)].register_once(response_callback)
 
         # send canopen message
         service = CanOpenService.sdo_rx
@@ -89,6 +149,10 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
 
 
     def process_msg(self, msg):
+        # convert msg into sdo msg
+
+
+
         # sdo response
         if msg.service == CanOpenService.sdo_tx: 
             
@@ -97,6 +161,7 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
 
             index = msg.data[1] | (msg.data[2] << 8)
             subindex = msg.data[3]
+            node_id = msg.node_id
 
             # sdo error
             if msg.data[0] == CanData.sdo_error:
@@ -107,14 +172,7 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
                 else:
                     error_msg = CanErrors.unknown % hex(error)
 
-                # error can happen for both sdo_write and sdo_read
-                for _key in ["sdo_write","sdo_read"]:
-                    key = (_key, node_id, index, subindex)
-                    if key in self.response_callbacks:
-                        # call response callback
-                        self.response_callbacks[key](error=error_msg)
-                        # remove response callback
-                        del self.response_callbacks[key]
+                self.signals_error[(node_id,index,subindex)].dispatch(error=error_msg)
 
             # read response
             if (msg.data[0] & CanData.sdo_upload_response) == CanData.sdo_upload_response:
@@ -123,21 +181,11 @@ class CanOpenSdoTransfer(CanOpenServiceBaseClass):
                 len_response_data = 4-(msg.data[0] >> 2) & 0b11
                 data = msg.data[4:4+len_response_data]
 
-                key = ("sdo_read", node_id, index, subindex)
+                self.signals_read_success[(node_id,index,subindex)].dispatch(data=data)
 
-                if key in self.response_callbacks:
-                    # call response callback
-                    self.response_callbacks[key](error=None,data=data)
-                    # remove response callback
-                    del self.response_callbacks[key]
 
             # write response: success
             if msg.data[0] == CanData.sdo_download_response: 
                 # get index and subindex from msg
-                key = ("sdo_write", node_id, index, subindex)
-                if key in self.response_callbacks:
-                    # call response callback
-                    self.response_callbacks[key](error=None)
-                    # remove response callback
-                    del self.response_callbacks[key]
-        
+
+                self.signals_write_success[(node_id,index,subindex)].dispatch()

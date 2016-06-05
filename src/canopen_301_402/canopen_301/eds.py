@@ -205,6 +205,22 @@ class EdsFile(object):
         self.mandatory_objects = EdsObjectList(self.config_parser,"MandatoryObjects")
         self.optional_objects = EdsObjectList(self.config_parser,"OptionalObjects")
 
+    def get_object(self, index, subindex):
+
+        def get_object_from_object_list(object_list)
+            if object_list is not None:
+                if index in object_list.objects:
+                    obj = object_list.objects[index]
+                    if subindex == 0:
+                        return obj
+                    else:
+                        return obj.sub_objects[subindex]
+
+        result = get_object_from_object_list(self.mandatory_objects)
+        if result is None:
+            result = get_object_from_object_list(self.optional_objects)
+
+        return result
 
     # def write(self, filename):
     #     with open(filename, 'wb') as configfile:

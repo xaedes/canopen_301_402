@@ -10,58 +10,61 @@ from canopen_301_402.assertions import Assertions
 from canopen_301_402.node import CanOpenNode
 from canopen_301_402.canopen_301.eds import *
 from canopen_301_402.canopen_301.cob import CanOpenId
+from canopen_301_402.canopen_301.broadcast import CanOpenBroadcast
 from canopen_301_402.canopen_301.msg import CanOpenMessage
+from canopen_301_402.canopen_301.msgs import Messages
 from canopen_301_402.canopen_301.datatypes import CanDatatypes
-from canopen_301_402.canopen_301.state import Can301State
-from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
-from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
-from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
 from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
 
+eds_config = defaultdict(lambda:None,{
+    1: "path/to/file.eds"
+})
+
 class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
     """docstring for CanOpen"""
-    def __init__(self, bus, eds_filename):
+    def __init__(self, bus, eds_config):
         super(CanOpen, self).__init__()
         self.bus = bus
         self.notifier = can.Notifier(self.bus,[self])
 
-        # load eds file containing application specific profile
-        self.eds = EdsFile()
-        self.eds.read(eds_filename)
+        self.eds_config = eds_config
 
-
-        # set up predefined connection set, mapping canopen services to function codes
-        self.connection_set = ConnectionSet()
-        self.connection_set.setup_from_eds(self.eds)
+        self.msgs = Messages(self)
 
         # canopen datatypes
         self.datatypes = CanDatatypes()
 
         # canopen nodes
         self.nodes = defaultdict(lambda:None)
+        self.nodes[0] = CanOpenBroadcast(self)
 
-        # initialize services
-        self.nmt = CanOpenNetworkManagement(self)
-        self.sdo = CanOpenSdoTransfer(self)
-        self.pdo = CanOpenPdoTransfer(self)
+        # set up predefined connection set, mapping canopen services to function codes
+        self.connection_set = ConnectionSet()
 
         # setup routing to services
-        self.services = dict()
-        self.services[CanOpenService.nmt] = self.nmt.process_msg
-        self.services[CanOpenService.nmt_error_control] = self.nmt.process_msg
-        self.services[CanOpenService.sdo_tx] = self.sdo.process_msg
-        self.services[CanOpenService.sdo_rx] = self.sdo.process_msg
-        self.services[CanOpenService.pdo1_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo1_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo2_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo2_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo3_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo3_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo4_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo4_rx] = self.pdo.process_msg
-        self.services[CanOpenService.sync] = None # todo
-        self.services[CanOpenService.emergency] = None # todo
+        self.broadcast_services = dict()
+        self.broadcast_services[CanOpenService.nmt] = self.nmt.process_msg
+        self.broadcast_services[CanOpenService.nmt_error_control] = self.nmt.process_msg
+        self.broadcast_services[CanOpenService.sync] = None # todo
+        self.broadcast_services[CanOpenService.emergency] = None # todo
+
+    def get_node(self, node_id):
+        if self.nodes[node_id] is None:
+            self.nodes[node_id] = self.init_node(node_id)
+
+        return self.nodes[node_id]
+
+    def init_node(self, node_id):
+        return CanOpenNode(self, node_id, self.eds_config[msg.node_id])
+
+    def get_connection_set(self, node_id):
+        if node_id == 0: 
+            # for broadcast messages (node_id==0) use default connection_set
+            return self.connection_set
+            
+        node = self.get_node(node_id)
+        return node.connection_set
 
     def send_can(self, can_id, data):
         '''
@@ -90,30 +93,18 @@ class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
         print msg
 
         # convert message to canopen message
-        msg = CanOpenMessage.from_can_msg(msg, self.connection_set)
+        msg = CanOpenMessage.from_can_msg(msg, self)
 
         # route canopen message to responsible service
-        service = self.services[msg.service]
+        if msg.broadcast:
+            service = self.broadcast_services[msg.service]
+        else:
+            node = self.get_node(msg.node_id)
+            service = node.services[msg.service]
 
-        # create CanOpenNode if not already present
-        if self.nodes[msg.node_id] is None:
-            self.nodes[msg.node_id] = CanOpenNode(self,msg.node_id)
+        assert callable(service)
+        service(msg)
 
-        if callable(service):
-            service(msg)
-
-        # len_data = len(msg.data) 
-        
-        # todo: replace this if construct by some kind of array lookup
-        # if msg.function_code == CanFunctionCode.nmt_error_control:
-        #     self.process_nmt_error_control_msg(msg, msg.function_code, msg.node_id, len_data)
-
-        # elif msg.function_code == CanFunctionCode.sdo_tx:
-        #     self.process_sdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
-
-        # elif msg.function_code in [CanFunctionCode.pdo1_tx, CanFunctionCode.pdo2_tx, CanFunctionCode.pdo3_tx]:
-        #     self.process_pdo_tx_msg(msg, msg.function_code, msg.node_id, len_data)
-
-        # elif msg.function_code in [CanFunctionCode.pdo1_rx, CanFunctionCode.pdo2_rx, CanFunctionCode.pdo3_rx]:
-        #     self.process_pdo_rx_msg(msg, msg.function_code, msg.node_id, len_data)
-
+    def start_remote_nodes(self):
+        msg = self.msgs.nmt(node_id=0,command=Can301StateCommandBits.start_remote_node)
+        self.send_msg(msg)

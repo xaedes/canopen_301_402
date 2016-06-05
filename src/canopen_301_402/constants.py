@@ -30,6 +30,16 @@ class CanOpenBasicDatatypes(Enum):
     uint32 = 0x0007
     float32 = 0x0008
 
+class CanOpenMessageType(Enum):
+    not_specified = 0
+    nmt_command = 1
+    nmt_request = 2
+    sdo_write_request = 3
+    sdo_write_response = 4
+    sdo_read_request = 5
+    sdo_read_response = 6
+        
+
 class CanOpenService(Enum):
     nmt               = 0
     sync              = 1
