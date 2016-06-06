@@ -15,6 +15,7 @@ class CanOpenObject(object):
 
         self.datatype_id = 0x0
         self._value = None
+        self._raw_data = None
         # get eds object definition
         self.eds_obj = self.node.eds.get_object(index, subindex)
         if self.eds_obj is not None:
@@ -25,20 +26,22 @@ class CanOpenObject(object):
         self.signal_value_updated = Signal()
         
     def _on_sdo_read_complete(self,index,subindex,data):
+        self._raw_data = data
         if self.datatype is not None:
-            self._value = self.datatype.decode(data)
+            self._value = self.datatype.decode(self._raw_data)
+            self.signal_value_updated.dispatch()
         else:
-            self._value = data
+            self._value = self._raw_data
+            self.signal_value_updated.dispatch()
 
     @property
     def value(self):
         return self._value
-        
-    @value.setter
-    def value(self, v):
-        self._value = v
-        self.signal_value_updated.dispatch()
 
+    @property
+    def raw_data(self):
+        return self._raw_data
+        
     @property
     def datatype(self):
         '''
