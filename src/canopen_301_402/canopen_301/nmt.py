@@ -8,7 +8,8 @@ import can
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
 from canopen_301_402.canopen_301.state import Can301State,Can301StateTransitions
-from canopen_301_402.canopen_301.msg import CanOpenMessage
+from canopen_301_402.canopen_msgs.msg import CanOpenMessage
+from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
 
 
@@ -19,50 +20,19 @@ class CanOpenNetworkManagement(CanOpenServiceBaseClass):
     def __init__(self, *args, **kwargs):
         super(CanOpenNetworkManagement, self).__init__(*args, **kwargs)
 
-    def send_nmt(self, command, node_id=0):
-        '''
-        @summary: send nmt message
-        @param command: Can301StateCommand
-        @param [node_id=0]: 0 = all nodes
-        @result: 
-        ''' 
-
-        Assertions.assert_node_id(node_id)
-        Assertions.assert_nmt_command(command)
-
-        # update canopen 301 state
-        if self.canopen.nodes[node_id].state in Can301StateTransitions:
-            transitions = Can301StateTransitions[self.nodes[node_id].state]
-            self.canopen.nodes[node_id].state = transitions[command]
-
-        # nmt message always needs node_id = 0 in CanOpenId.encode 
-        # the node_id is specified in second data byte
-        node_id = 0
-        service = CanOpenService.nmt
-        function_code = self.canopen.connection_set.determine_function_code(service)
-        data = [Can301StateCommandBits[command], node_id]
-        msg = CanOpenMessage(function_code, node_id, service, data)
-
-        self.canopen.send_msg(msg)
-
     def process_msg(self, msg):
-        # boot up message
-        if msg.service == CanOpenService.nmt_error_control and len(msg.data) == 1 and msg.data[0] == 0: 
+        if isinstance(msg, CanOpenMessageNmtBootup):
             # device starts in state initialization
             # boot up message signals end of initialization
-            if self.canopen.nodes[msg.node_id].state301 == Can301State.initialisation:
-                self.canopen.nodes[msg.node_id].state301 = Can301State.pre_operational
-                print "changed 301 state to",self.canopen.nodes[msg.node_id].state301
-
-
-    def process_sent_msg(self, msg):
-        print "process_sent_msg", msg.__dict__
-        if msg.msg_type == CanOpenMessageType.nmt_command:
+            if self.node.state301 == Can301State.initialisation:
+                self.node.state301 = Can301State.pre_operational
+                print "changed 301 state to",self.node.state301
+                
+        elif isinstance(msg, CanOpenMessageNmtCommand):
             # change state according to nmt command
-
-            if self.canopen.nodes[msg.node_id].state301 in Can301StateTransitions:
-                transitions = Can301StateTransitions[self.nodes[node_id].state301]
-                self.canopen.nodes[msg.node_id].state301 = transitions[command]
+            if self.node.state301 in Can301StateTransitions:
+                transitions = Can301StateTransitions[self.node.state301]
+                self.node.state301 = transitions[command]
             
 
-                print "changed 301 state to",self.canopen.nodes[msg.node_id].state301
+                print "changed 301 state to",self.node.state301

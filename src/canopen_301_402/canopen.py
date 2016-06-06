@@ -10,8 +10,8 @@ from canopen_301_402.assertions import Assertions
 from canopen_301_402.node import CanOpenNode
 from canopen_301_402.canopen_301.cob import CanOpenId
 from canopen_301_402.canopen_301.broadcast import CanOpenBroadcast
-from canopen_301_402.canopen_301.msg import CanOpenMessage
-from canopen_301_402.canopen_301.msgs import Messages
+from canopen_301_402.canopen_msgs.msg import CanOpenMessage
+from canopen_301_402.canopen_msgs.msgs import CanOpenMessages
 from canopen_301_402.canopen_301.datatypes import CanDatatypes
 from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
@@ -29,7 +29,7 @@ class CanOpen(can.Listener):
 
         self.eds_config = eds_config
 
-        self.msgs = Messages(self)
+        self.msgs = CanOpenMessages(self)
 
         # canopen datatypes
         self.datatypes = CanDatatypes()
@@ -72,30 +72,44 @@ class CanOpen(can.Listener):
         msg = can.Message(arbitration_id=can_id,data=data,extended_id=False)
         self.bus.send(msg)
 
-    def send_msg(self, can_open_msg):
+    def send_msg(self, msg):
         '''
         @summary: 
-        @param can_open_msg: CanOpenMessage
+        @param msg: CanOpenMessage or subclass
         @result: 
         '''
-        self.bus.send(can_open_msg.to_can_msg())
+        self.bus.send(msg.to_can_msg())
 
-        print can_open_msg.__dict__
-        # route canopen message to responsible service
-        node = self.get_node(can_open_msg.node_id)
-        service = node.services[can_open_msg.service]
+        self.on_message_received(msg)
 
-        print "service",service
-        if service is not None:
-            service.process_sent_msg(can_open_msg)
+        # print msg.__dict__
+
+        # # route canopen message to responsible service
+        # node = self.get_node(msg.node_id)
+        # service = node.services[msg.service]
+
+        # print "service",service
+        # if service is not None:
+        #     service.process_msg(msg)
 
 
     def on_message_received(self, msg):
-        print msg
+        print "on_message_received"
+        print "--"
+        print "raw", msg
 
         # convert message to canopen message
-        msg = CanOpenMessage.from_can_msg(msg, self)
+        if type(msg) == can.Message:
+            msg = CanOpenMessage.from_can_msg(msg, self)
 
+        # parse message into higher level canopen message types
+        if type(msg) == CanOpenMessage:
+            msg = self.msgs.try_to_upgrage_canopen_message(msg)
+
+        print "msg type: ", type(msg)
+        print msg.__dict__
+        print ""
+        
         # route canopen message to responsible service
         node = self.get_node(msg.node_id)
         service = node.services[msg.service]
@@ -104,6 +118,9 @@ class CanOpen(can.Listener):
         if service is not None:
             service.process_msg(msg)
 
+        print ""
+        print ""
+        print ""
 
     def start_remote_nodes(self):
         msg = self.msgs.nmt(node_id=0,command=Can301StateCommandBits.start_remote_node)
