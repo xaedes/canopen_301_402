@@ -62,11 +62,11 @@ class Messages(object):
             # encode number of data bytes to be written
             sdo_download_request = ((4-len_data)<<2) | CanData.sdo_download_request_bits
         
-        data = [sdo_download_request, # specifies, that we want to write value to object dictionary
+        data = ([sdo_download_request, # specifies, that we want to write value to object dictionary
                 (index & 0xff),       # index low byte
                 (index>>8),           # index high byte
                 subindex]             # 8 bit subindex
-                + data           # data to be written
+                + data)           # data to be written
         
         # build canopen message
         service = CanOpenService.sdo_rx

@@ -200,7 +200,7 @@ class CanDatatypeUInt32(CanDatatypeStruct):
 
     @classmethod
     def identifier(cls):
-        return CanOpenBasicDatatypes.uin32
+        return CanOpenBasicDatatypes.uint32
 
     @classmethod
     def number_of_bits(cls):

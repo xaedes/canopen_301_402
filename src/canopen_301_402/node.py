@@ -14,14 +14,6 @@ from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
 from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
 from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
-# class CanOpenNodeClient(object):
-#     """docstring for CanOpenNodeClient"""
-#     def __init__(self, node):
-#         super(CanOpenNodeClient, self).__init__()
-#         self.node = node
-#         self.canopen = node.canopen
-        
-
 class CanOpenNode(object):
     def __init__(self, canopen, node_id, eds_filename=None):
         super(CanOpenNode, self).__init__()

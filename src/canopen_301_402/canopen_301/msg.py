@@ -32,7 +32,7 @@ class CanOpenMessage(object):
         
     def to_can_msg(self):
         arbitration_id = CanOpenId.encode(self.function_code, self.node_id)
-        can.Message(arbitration_id=arbitration_id,data=data,extended_id=False)
+        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False)
 
     @classmethod
     def from_can_msg(cls, msg, canopen):

@@ -21,7 +21,7 @@ eds_config = defaultdict(lambda:None,{
     1: "path/to/file.eds"
 })
 
-class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
+class CanOpen(can.Listener):
     """docstring for CanOpen"""
     def __init__(self, bus, eds_config):
         super(CanOpen, self).__init__()
@@ -41,13 +41,6 @@ class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
 
         # set up predefined connection set, mapping canopen services to function codes
         self.connection_set = ConnectionSet()
-
-        # setup routing to services
-        self.broadcast_services = dict()
-        self.broadcast_services[CanOpenService.nmt] = self.nmt.process_msg
-        self.broadcast_services[CanOpenService.nmt_error_control] = self.nmt.process_msg
-        self.broadcast_services[CanOpenService.sync] = None # todo
-        self.broadcast_services[CanOpenService.emergency] = None # todo
 
     def get_node(self, node_id):
         if self.nodes[node_id] is None:
@@ -96,11 +89,8 @@ class CanOpen(CanOpenSdoTransfer,CanOpenPdoTransfer,can.Listener):
         msg = CanOpenMessage.from_can_msg(msg, self)
 
         # route canopen message to responsible service
-        if msg.broadcast:
-            service = self.broadcast_services[msg.service]
-        else:
-            node = self.get_node(msg.node_id)
-            service = node.services[msg.service]
+        node = self.get_node(msg.node_id)
+        service = node.services[msg.service]
 
         assert callable(service)
         service(msg)

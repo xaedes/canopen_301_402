@@ -207,7 +207,7 @@ class EdsFile(object):
 
     def get_object(self, index, subindex):
 
-        def get_object_from_object_list(object_list)
+        def get_object_from_object_list(object_list):
             if object_list is not None:
                 if index in object_list.objects:
                     obj = object_list.objects[index]
