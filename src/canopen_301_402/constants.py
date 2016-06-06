@@ -111,27 +111,27 @@ class Can402StateCommand(Enum):
 @summary: Bits to be set in controlword; masked with Can402StateCommandMask
 '''
 Can402StateCommandBits = dict({
-    Can402StateCommand.shutdown          = 0b0110,
-    Can402StateCommand.switch_on         = 0b0111,
-    Can402StateCommand.disable_voltage   = 0b0000,
-    Can402StateCommand.quick_stop        = 0b0010,
-    Can402StateCommand.disable_operation = 0b0111, 
-    Can402StateCommand.enable_operation  = 0b1111,
+    Can402StateCommand.shutdown          : 0b0110,
+    Can402StateCommand.switch_on         : 0b0111,
+    Can402StateCommand.disable_voltage   : 0b0000,
+    Can402StateCommand.quick_stop        : 0b0010,
+    Can402StateCommand.disable_operation : 0b0111, 
+    Can402StateCommand.enable_operation  : 0b1111,
     # normally we only change the 4 lowest bits, but for fault reset
     # we need to set the 8th bit
-    Can402StateCommand.fault_reset       = 0b10000000 
+    Can402StateCommand.fault_reset       : 0b10000000 
     })
 
 Can402StateCommandMask = dict({
-    Can402StateCommand.shutdown          = 0b0111 
-    Can402StateCommand.switch_on         = 0b1111
-    Can402StateCommand.disable_voltage   = 0b0010
-    Can402StateCommand.quick_stop        = 0b0110
-    Can402StateCommand.disable_operation = 0b1111
-    Can402StateCommand.enable_operation  = 0b1111
+    Can402StateCommand.shutdown          : 0b0111, 
+    Can402StateCommand.switch_on         : 0b1111,
+    Can402StateCommand.disable_voltage   : 0b0010,
+    Can402StateCommand.quick_stop        : 0b0110,
+    Can402StateCommand.disable_operation : 0b1111,
+    Can402StateCommand.enable_operation  : 0b1111,
     # normally we only change the 4 lowest bits, but for fault reset
     # we need to set the 8th bit
-    Can402StateCommand.fault_reset       = 0b10000000
+    Can402StateCommand.fault_reset       : 0b10000000
     })
 
 class Can402Objects(object):
