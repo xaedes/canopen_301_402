@@ -25,7 +25,7 @@ class Messages(object):
         connection_set = self.canopen.get_connection_set(node_id)
         function_code = connection_set.determine_function_code(service)
         data = [Can301StateCommandBits[command], node_id]
-        msg = CanOpenMessage(function_code, 0, service, data, msg_type)
+        msg = CanOpenMessage(function_code, node_id, service, data, msg_type)
         return msg
     
     def nmt_request(self):
@@ -34,6 +34,12 @@ class Messages(object):
         @param cls:
         @result: 
         '''
+
+        # todo: this does not seem to create a proper remote request
+        # candump vcan0
+        #   vcan0  000   [0]  remote request    # it should look like this
+        #   vcan0  000   [0]                    # this is the current output
+
         node_id = 0
         service = CanOpenService.nmt
         msg_type = CanOpenMessageType.nmt_request

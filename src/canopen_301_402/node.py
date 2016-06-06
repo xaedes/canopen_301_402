@@ -8,6 +8,7 @@ from canopen_301_402.constants import *
 from canopen_301_402.canopen_301.state import Can301State
 from canopen_301_402.canopen_301.obj_dict import CanOpenObjectDictionary
 from canopen_301_402.canopen_402.state import Can402State
+from canopen_301_402.canopen_301.eds import *
 
 from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
 from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
@@ -35,7 +36,7 @@ class CanOpenNode(object):
         self.pdo = CanOpenPdoTransfer(self)
 
         # object dictionary
-        self.obj_dict = CanOpenObjectDictionary(self.canopen)
+        self.obj_dict = CanOpenObjectDictionary(self)
 
         self.state301 = Can301State.initialisation
         
@@ -46,22 +47,22 @@ class CanOpenNode(object):
         # todo self.master = CanOpenNodeMaster(self) 
 
         self.can402_supported = None # None means unknown, otherwise it is Boolean
-        self.check_402()
+        # self.check_402()
         
         # setup routing to services
         self.services = dict()
-        self.services[CanOpenService.nmt] = self.nmt.process_msg
-        self.services[CanOpenService.nmt_error_control] = self.nmt.process_msg
-        self.services[CanOpenService.sdo_tx] = self.sdo.process_msg
-        self.services[CanOpenService.sdo_rx] = self.sdo.process_msg
-        self.services[CanOpenService.pdo1_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo1_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo2_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo2_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo3_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo3_rx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo4_tx] = self.pdo.process_msg
-        self.services[CanOpenService.pdo4_rx] = self.pdo.process_msg
+        self.services[CanOpenService.nmt] = self.nmt
+        self.services[CanOpenService.nmt_error_control] = self.nmt
+        self.services[CanOpenService.sdo_tx] = self.sdo
+        self.services[CanOpenService.sdo_rx] = self.sdo
+        self.services[CanOpenService.pdo1_tx] = self.pdo
+        self.services[CanOpenService.pdo1_rx] = self.pdo
+        self.services[CanOpenService.pdo2_tx] = self.pdo
+        self.services[CanOpenService.pdo2_rx] = self.pdo
+        self.services[CanOpenService.pdo3_tx] = self.pdo
+        self.services[CanOpenService.pdo3_rx] = self.pdo
+        self.services[CanOpenService.pdo4_tx] = self.pdo
+        self.services[CanOpenService.pdo4_rx] = self.pdo
         self.services[CanOpenService.sync] = None # todo
         self.services[CanOpenService.emergency] = None # todo
 

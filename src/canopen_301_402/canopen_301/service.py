@@ -9,4 +9,7 @@ class CanOpenServiceBaseClass(object):
         
     def process_msg(self, msg):
         pass
+    
+    def process_sent_msg(self, msg):
+        pass
         

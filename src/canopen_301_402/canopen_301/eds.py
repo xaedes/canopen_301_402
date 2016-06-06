@@ -106,26 +106,27 @@ class EdsObjectType(Enum):
 
 class EdsObject(object):
     """docstring for EdsObject"""
-    def __init__(self, config_parser, index, subindex = None):
+    def __init__(self, config_parser, index, subindex = 0):
         super(EdsObject, self).__init__()
         object_id_str = str.upper(hex(index)[2:])
-        if subindex is not None:
+        if subindex > 0:
             object_id_str += "sub" + str.upper(hex(subindex)[2:])
             
         dictionary = get_section(config_parser,object_id_str)
 
         self.index = index
         self.subindex = subindex
+
         
         self.parameter_name = dictionary["ParameterName"]
         self.object_type = parseIntAutoBase(dictionary["ObjectType"])
+        self.object_type = EdsObjectType(self.object_type)
         self.obj_flags = dictionary["ObjFlags"]
         
         # object types: (301_v04020005_cor3.pdf pg. 89)
         # 0x00: null - object with no data fields
         # 0x01: null - object with no data fields
-
-        if self.object_type == EdsObjectType.var: 
+        if self.object_type == EdsObjectType.var:
             # var type
             self.data_type = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
@@ -136,7 +137,6 @@ class EdsObject(object):
             self.pdo_mapping = dictionary["PDOMapping"] == "1"
 
         elif self.object_type in [EdsObjectType.array, EdsObjectType.record]: 
-            assert self.subindex is None # no deep hierarchy
             # array or record type
 
             # determine number of sub objects
@@ -144,7 +144,7 @@ class EdsObject(object):
             self.sub_objects = list()
 
             # read sub objects
-            for k in range(0,self.sub_number):
+            for k in range(1,self.sub_number):
                 self.sub_objects.append(EdsObject(config_parser, self.index, k))
 
 class EdsObjectList(object):

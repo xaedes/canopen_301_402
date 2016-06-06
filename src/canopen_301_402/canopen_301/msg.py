@@ -23,20 +23,22 @@ class CanOpenMessage(object):
         self.msg_type = msg_type
         self.function_code = function_code
         self.node_id = node_id
-        if self.node_id == 0:
-            self.broadcast = True
-        else:
-            self.broadcast = False
         self.service = service
+        if self.service in [CanOpenService.nmt,CanOpenService.sync]:
+            self.broadcast = True
         self.data = data
         
     def to_can_msg(self):
-        arbitration_id = CanOpenId.encode(self.function_code, self.node_id)
+        if self.broadcast:
+            arbitration_id = CanOpenId.encode(self.function_code, 0)
+        else:
+            arbitration_id = CanOpenId.encode(self.function_code, self.node_id)
+            
         return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False)
 
     @classmethod
     def from_can_msg(cls, msg, canopen):
-        assert msg.extended_id == False 
+        assert not hasattr(msg,"extended_id") or (msg.extended_id == False) 
 
         function_code, node_id = CanOpenId.decode(msg.arbitration_id)
 

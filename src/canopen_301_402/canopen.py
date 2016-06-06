@@ -8,7 +8,6 @@ import can
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
 from canopen_301_402.node import CanOpenNode
-from canopen_301_402.canopen_301.eds import *
 from canopen_301_402.canopen_301.cob import CanOpenId
 from canopen_301_402.canopen_301.broadcast import CanOpenBroadcast
 from canopen_301_402.canopen_301.msg import CanOpenMessage
@@ -18,7 +17,7 @@ from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
 
 eds_config = defaultdict(lambda:None,{
-    1: "path/to/file.eds"
+    1: "/home/xaedes/gits/fahrrad/eds/605.3150.68-A-EK-2-60.eds"
 })
 
 class CanOpen(can.Listener):
@@ -49,7 +48,7 @@ class CanOpen(can.Listener):
         return self.nodes[node_id]
 
     def init_node(self, node_id):
-        return CanOpenNode(self, node_id, self.eds_config[msg.node_id])
+        return CanOpenNode(self, node_id, self.eds_config[node_id])
 
     def get_connection_set(self, node_id):
         if node_id == 0: 
@@ -81,6 +80,15 @@ class CanOpen(can.Listener):
         '''
         self.bus.send(can_open_msg.to_can_msg())
 
+        print can_open_msg.__dict__
+        # route canopen message to responsible service
+        node = self.get_node(can_open_msg.node_id)
+        service = node.services[can_open_msg.service]
+
+        print "service",service
+        if service is not None:
+            service.process_sent_msg(can_open_msg)
+
 
     def on_message_received(self, msg):
         print msg
@@ -92,9 +100,12 @@ class CanOpen(can.Listener):
         node = self.get_node(msg.node_id)
         service = node.services[msg.service]
 
-        assert callable(service)
-        service(msg)
+        print "service",service
+        if service is not None:
+            service.process_msg(msg)
+
 
     def start_remote_nodes(self):
         msg = self.msgs.nmt(node_id=0,command=Can301StateCommandBits.start_remote_node)
         self.send_msg(msg)
+
