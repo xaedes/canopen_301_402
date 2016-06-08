@@ -94,9 +94,9 @@ class CanOpen(can.Listener):
 
 
     def on_message_received(self, msg):
-        print "on_message_received"
-        print "--"
-        print "raw", msg
+        # print "on_message_received"
+        # print "--"
+        # print "raw", msg
 
         # convert message to canopen message
         if type(msg) == can.Message:
@@ -106,21 +106,21 @@ class CanOpen(can.Listener):
         if type(msg) == CanOpenMessage:
             msg = self.msgs.try_to_upgrage_canopen_message(msg)
 
-        print "msg type: ", type(msg)
-        print msg.__dict__
-        print ""
+        # print "msg type: ", type(msg)
+        # print msg.__dict__
+        # print ""
         
         # route canopen message to responsible service
         node = self.get_node(msg.node_id)
         service = node.services[msg.service]
 
-        print "service",service
+        # print "service",service
         if service is not None:
             service.process_msg(msg)
 
-        print ""
-        print ""
-        print ""
+        # print ""
+        # print ""
+        # print ""
 
     def start_remote_nodes(self):
         msg = self.msgs.nmt(node_id=0,command=Can301StateCommandBits.start_remote_node)
