@@ -131,7 +131,11 @@ class EdsObject(object):
             self.data_type = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
             # todo map access_type string to EdsObjectAttribute 
-            self.default_value = dictionary["DefaultValue"]
+            try:
+                self.default_value = parseIntAutoBase(dictionary["DefaultValue"])
+            except:
+                self.default_value = dictionary["DefaultValue"]
+            
             self.low_limit = parseIntAutoBase(dictionary["LowLimit"])
             self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
             self.pdo_mapping = dictionary["PDOMapping"] == "1"

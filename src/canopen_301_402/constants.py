@@ -98,6 +98,33 @@ Can301StateCommandBits = dict({
     Can301StateCommand.reset_communication:   0x82,
     })
 
+class Can301State(Enum):
+    initialisation  = 0
+    pre_operational = 1
+    operational     = 2
+    stopped         = 3 # no sdo and bdo access, only nmt to change state
+
+Can301StateTransitions = dict({
+            Can301State.pre_operational: {
+                    Can301StateCommand.reset_communication: Can301State.initialisation,
+                    Can301StateCommand.reset_node:          Can301State.initialisation,
+                    Can301StateCommand.start_remote_node:   Can301State.operational,
+                    Can301StateCommand.stop_remote_node:    Can301State.stopped
+                },
+            Can301State.operational: {
+                    Can301StateCommand.reset_communication:   Can301State.initialisation,
+                    Can301StateCommand.reset_node:            Can301State.initialisation,
+                    Can301StateCommand.enter_pre_operational: Can301State.pre_operational,
+                    Can301StateCommand.stop_remote_node:      Can301State.stopped
+                },
+            Can301State.stopped: {
+                    Can301StateCommand.reset_communication:   Can301State.initialisation,
+                    Can301StateCommand.reset_node:            Can301State.initialisation,
+                    Can301StateCommand.enter_pre_operational: Can301State.pre_operational,
+                    Can301StateCommand.start_remote_node:     Can301State.operational
+                },
+        })
+
 class Can402StateCommand(Enum):
     shutdown          = 0 # 2,6,8
     switch_on         = 1 # 3
@@ -106,6 +133,53 @@ class Can402StateCommand(Enum):
     disable_operation = 4 # 5
     enable_operation  = 5 # 4,16
     fault_reset       = 6 # 15
+
+class Can402State(Enum):
+    # Kommunikation DE_7000_00030.PDF pg. 75
+    
+    start                  = 0
+    not_ready_to_switch_on = 1 
+    # first two states will be run through autonomously
+    # the device will normally be in "switch_on_disabled"
+    # after successful initialization
+    switch_on_disabled     = 2
+    ready_to_switch_on     = 3
+    switched_on            = 4
+    operation_enable       = 5
+    quick_stop_active      = 6
+    fault_reaction_active  = 7
+    fault                  = 8
+
+Can402StateTransitions = dict({
+            Can402State.switch_on_disabled: {
+                    Can402StateCommand.shutdown:              Can402State.ready_to_switch_on
+                },
+            Can402State.ready_to_switch_on: {
+                    Can402StateCommand.disable_voltage:       Can402State.switch_on_disabled,
+                    Can402StateCommand.quick_stop:            Can402State.switch_on_disabled,
+                    Can402StateCommand.switch_on:             Can402State.switched_on
+                },
+            Can402State.switched_on: {
+                    Can402StateCommand.disable_voltage:       Can402State.switch_on_disabled,
+                    Can402StateCommand.quick_stop:            Can402State.switch_on_disabled,
+                    Can402StateCommand.shutdown:              Can402State.ready_to_switch_on,
+                    Can402StateCommand.enable_operation:      Can402State.operation_enable
+                },
+            Can402State.operation_enable: {
+                    Can402StateCommand.disable_voltage:       Can402State.switch_on_disabled,
+                    Can402StateCommand.quick_stop:            Can402State.quick_stop_active,
+                    Can402StateCommand.shutdown:              Can402State.ready_to_switch_on,
+                    Can402StateCommand.disable_operation:     Can402State.switched_on
+                },
+            Can402State.quick_stop_active: {
+                    Can402StateCommand.enable_operation:      Can402State.operation_enable,
+                    Can402StateCommand.disable_voltage:       Can402State.switch_on_disabled
+                },
+            Can402State.fault: {
+                    Can402StateCommand.fault_reset:           Can402State.switch_on_disabled
+                },
+        })
+
 
 '''
 @summary: Bits to be set in controlword; masked with Can402StateCommandMask
@@ -137,6 +211,72 @@ Can402StateCommandMask = dict({
 class Can402Objects(object):
     controlword = (0x6040,0x00)
     statusword  = (0x6041,0x00)
+    modes_of_operation_set = (0x6060,0x00)
+    modes_of_operation_get = (0x6061,0x00)
+    target_position = (0x607A,0x00)
+
+Can402StatuswordStateBits = dict({
+    Can402State.not_ready_to_switch_on  : 0b0000000,
+    Can402State.switch_on_disabled      : 0b1000000,
+    Can402State.ready_to_switch_on      : 0b0100001,
+    Can402State.switched_on             : 0b0100011,
+    Can402State.operation_enable        : 0b0100111,
+    Can402State.quick_stop_active       : 0b0000111,
+    Can402State.fault_reaction_active   : 0b0001111,
+    Can402State.fault                   : 0b0001000
+    })
+
+Can402StatuswordStateMasks = dict({
+    Can402State.not_ready_to_switch_on  : 0b1001111,
+    Can402State.switch_on_disabled      : 0b1001111,
+    Can402State.ready_to_switch_on      : 0b1101111,
+    Can402State.switched_on             : 0b1101111,
+    Can402State.operation_enable        : 0b1101111,
+    Can402State.quick_stop_active       : 0b1101111,
+    Can402State.fault_reaction_active   : 0b1001111,
+    Can402State.fault                   : 0b1001111
+    })
+
+class Can402ControlwordBits(object):
+    switch_on = 0
+    enable_voltage = 1
+    quick_stop = 2
+    enable_operation = 3
+    new_set_point = 4
+    change_set_immediately = 5
+    abs_rel = 6
+    fault_reset = 7
+    halt = 8
+
+class Can402StatuswordBits(object):
+    ready_to_switch_on = 0
+    switched_on = 1
+    operation_enabled = 2
+    fault = 3
+    voltage_enable = 4
+    quick_stop = 5
+    switch_on_disabled = 6
+    warning = 7 # not in use
+    unused_0 = 8 
+    remote = 9 # not in use
+    target_reached = 10
+    internal_limit_active = 11
+    set_point_ack = 12
+    homing_error = 13
+    hard_notify = 14
+    unused_1 = 15
+
+class Can402ModesOfOperation(Enum):
+    position = 0
+    velocity = 1
+    homing = 2
+    
+Can402ModesOfOperationBits = {
+    Can402ModesOfOperation.position: 1,
+    Can402ModesOfOperation.velocity: 3,
+    Can402ModesOfOperation.homing: 6
+}
+        
 
 # Kommunikation DE_7000_00030.PDF pg. 64
 # https://github.com/rscada/libcanopen/blob/master/canopen/canopen.c

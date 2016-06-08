@@ -92,7 +92,7 @@ class CanDatatypeStruct(CanDatatype):
 
     @classmethod
     def encode(cls, value):
-        struct.pack(cls.data_format, value)
+        return bytearray(struct.pack(cls.data_format, value))
 
     @classmethod
     def decode_string(cls, string):

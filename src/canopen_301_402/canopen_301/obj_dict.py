@@ -13,13 +13,3 @@ class CanOpenObjectDictionary(object):
         self.node = node
         self.canopen = self.node.canopen
         self.objects = defaultdict(lambda:None)
-        self.populate_with_defaults()
-        
-    def populate_with_defaults(self):
-        # init controlword and statusword
-        self.objects[Can402Objects.controlword] = CanOpenObject(self.node, *Can402Objects.controlword)
-        self.objects[Can402Objects.statusword] = CanOpenObject(self.node, *Can402Objects.statusword)
-        
-        # set datatype of both to uint16
-        self.objects[Can402Objects.controlword].datatype_id = CanOpenBasicDatatypes.uint16
-        self.objects[Can402Objects.statusword].datatype_id = CanOpenBasicDatatypes.uint16

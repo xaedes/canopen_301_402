@@ -24,15 +24,15 @@ class CanOpenNetworkManagement(CanOpenServiceBaseClass):
         if isinstance(msg, CanOpenMessageNmtBootup):
             # device starts in state initialization
             # boot up message signals end of initialization
-            if self.node.state301 == Can301State.initialisation:
-                self.node.state301 = Can301State.pre_operational
-                print "changed 301 state to",self.node.state301
+            if self.node.state == Can301State.initialisation:
+                self.node.state = Can301State.pre_operational
+                print "changed 301 state to",self.node.state
                 
         elif isinstance(msg, CanOpenMessageNmtCommand):
             # change state according to nmt command
-            if self.node.state301 in Can301StateTransitions:
-                transitions = Can301StateTransitions[self.node.state301]
-                self.node.state301 = transitions[command]
+            if self.node.state in Can301StateTransitions:
+                transitions = Can301StateTransitions[self.node.state]
+                self.node.state = transitions[command]
             
 
-                print "changed 301 state to",self.node.state301
+                print "changed 301 state to",self.node.state
