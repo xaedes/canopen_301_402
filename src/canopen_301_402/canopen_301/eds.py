@@ -7,6 +7,8 @@ from flufl.enum import Enum
 
 from canopen_301_402.utils import parseIntAutoBase
 
+from canopen_301_402.constants import CanOpenBasicDatatypes
+
 
 class EdsFileInfo(object):
     """docstring for EdsFileInfo"""
@@ -75,34 +77,6 @@ class EdsComments(object):
             self.lines.append(dictionary["Line"+str(k)])
 
 
-class EdsObjectAttribute(Enum):
-    #301_v04020005_cor3.pdf pg. 90 
-    rw    = 0 # read and write access
-    wo    = 1 # write only access
-    ro    = 2 # read only access
-    const = 3 # read only access, value is constant 
-              # The value may change in NMT state Initialisation. 
-              # The value shall not change in the NMT states pre-
-              # operation, operational and stopped. 
-                    
-
-class EdsObjectType(Enum):
-    #301_v04020005_cor3.pdf pg. 89 
-    null      = 0x00  # object with no data fields
-    domain    = 0x02  # large variable amount of data e.g. executable program code 
-    deftype   = 0x05  # denotes a type definition such as a BOOLEAN, UNSIGNED16, FLOAT and so on 
-    defstruct = 0x06  # defines a new record type e.g. the PDO mapping structure at 21 h  
-    var       = 0x07  # A single value such as an UNSIGNED8, BOOLEAN, FLOAT, INTEGER16, VISIBLE STRING etc. 
-    array     = 0x08  # A multiple data field object where each data field is a simple variable of the
-                      # SAME basic data type e.g. array of UNSIGNED16 etc. Sub-index 0 is of UNSIGNED8 
-                      # and therefore not part of the ARRAY data         
-    record    = 0x09  # A multiple data field object where the 
-                      # data fields may be any combination of 
-                      # simple variables. Sub-index 0 is of 
-                      # UNSIGNED8 and sub-index 255 is of 
-                      # UNSIGNED32 and therefore not part 
-                      # of the RECORD data 
-
 
 class EdsObject(object):
     """docstring for EdsObject"""
@@ -120,17 +94,17 @@ class EdsObject(object):
         
         self.parameter_name = dictionary["ParameterName"]
         self.object_type = parseIntAutoBase(dictionary["ObjectType"])
-        self.object_type = EdsObjectType(self.object_type)
+        self.object_type = CanOpenObjectType(self.object_type)
         self.obj_flags = dictionary["ObjFlags"]
         
         # object types: (301_v04020005_cor3.pdf pg. 89)
         # 0x00: null - object with no data fields
         # 0x01: null - object with no data fields
-        if self.object_type == EdsObjectType.var:
+        if self.object_type == CanOpenObjectType.var:
             # var type
             self.data_type = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
-            # todo map access_type string to EdsObjectAttribute 
+            # todo map access_type string to CanOpenObjectAttribute 
             try:
                 self.default_value = parseIntAutoBase(dictionary["DefaultValue"])
             except:
@@ -140,7 +114,7 @@ class EdsObject(object):
             self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
             self.pdo_mapping = dictionary["PDOMapping"] == "1"
 
-        elif self.object_type in [EdsObjectType.array, EdsObjectType.record]: 
+        elif self.object_type in [CanOpenObjectType.array, CanOpenObjectType.record]: 
             # array or record type
 
             # determine number of sub objects
