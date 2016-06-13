@@ -102,7 +102,7 @@ class EdsObject(object):
         # 0x01: null - object with no data fields
         if self.object_type == CanOpenObjectType.var:
             # var type
-            self.data_type = parseIntAutoBase(dictionary["DataType"])
+            self.datatype = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
             # todo map access_type string to CanOpenObjectAttribute 
             try:

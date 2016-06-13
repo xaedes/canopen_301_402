@@ -20,7 +20,7 @@ class CanOpenObject(object):
         self.eds_obj = self.node.eds.get_object(index, subindex)
         if self.eds_obj is not None:
             # if there is an eds object definition assign datatype and defaults
-            self.datatype_id = self.eds_obj.data_type
+            self.datatype_id = self.eds_obj.datatype
             self._value = self.eds_obj.default_value
 
         self.signal_value_updated = Signal()

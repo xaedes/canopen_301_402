@@ -9,224 +9,218 @@ from canopen_301_402.utils import parseIntAutoBase
 from canopen_301_402.constants import CanOpenBasicDatatypes
 
 class CanDatatype(object):
-    '''
-    @summary: abstract base class for all can datatypes
-    '''
+    def __init__(self):
+        '''
+        @summary: abstract base class for all can datatypes
+        @raises:  NotImplemented
+        '''
+        raise NotImplemented
 
-    @classmethod
-    def identifier(cls):
+    def identifier(self):
         '''
         @summary: return standard data type identifier
-        @param cls:
+        @param self:
         @result: uint16 containing data type identifier
 
         @see http://atlas.web.cern.ch/Atlas/GROUPS/DAQTRIG/DCS/LMB/PROFILE/cano-eds.htm
         '''
         raise NotImplemented
 
-    @classmethod
-    def number_of_bits(cls):
+    def number_of_bits(self):
         '''
         @summary: returns number of bits for one value encoded with this datatype
-        @param cls:
+        @param self:
         @result: number of bits
         '''
         raise NotImplemented
 
-    @classmethod
-    def decode(cls, data):
+    def decode(self, data):
         '''
         @summary: returns value of decoded data
-        @param cls:
+        @param self:
         @param data: byte array
         @result: value
         '''
         raise NotImplemented
 
-    @classmethod
-    def encode(cls, value):
+    def encode(self, value):
         '''
         @summary: returns encoded value
-        @param cls:
+        @param self:
         @param value: value to be encoded
         @result: data byte array
         '''
         raise NotImplemented
 
-    @classmethod
-    def decode_string(cls, string):
+    def decode_string(self, string):
         '''
         @summary: returns value of human readable representation
-        @param cls:
+        @param self:
         @param string: human readable representation of value as string
         @result: value
         '''
         raise NotImplemented
 
-    @classmethod
-    def encode_string(cls, value):
+    def encode_string(self, value):
         '''
         @summary: returns human readable representation
-        @param cls:
+        @param self:
         @param value: value to be encoded
         @result: human readable representation of value as string
         '''
         raise NotImplemented
 
 class CanDatatypeStruct(CanDatatype):
-    '''
-    @summary: can data type base class using python 'struct' module for data coding
-              you must specify data_format in a subclass
-    '''
-    
-    # example data_format; overwrite this in a subclass
-    # '<' little endian
-    # 'i' 32 bit signed integer
-    data_format = "<i"
+    def __init__(self, identifier, struct_data_format):
+        '''
+        @summary: Can data type base class using python 'struct' module for data coding
+        @param identifier:         specifies can datatype identifier 
+        @param struct_data_format: specifies data format for struct.pack and struct.unpack
+        
+        example data_format "<i"
+        '<' little endian
+        'i' 32 bit signed integer
 
-    @classmethod
-    def decode(cls, data):
-        result = struct.unpack_from(cls.data_format, data)
-        value, = result
+        '''
+        self._identifier = identifier
+        self._data_format = struct_data_format
+        self._number_of_bits = struct.calcsize(self.data_format)*8
+    
+    def identifier(self):
+        return self._identifier
+
+    def number_of_bits(self):
+        return self._number_of_bits
+
+    @property
+    def data_format(self):
+        # '<' : little endian
+        return '<' + self._data_format
+    
+
+    def decode(self, data):
+        result = struct.unpack_from(self.data_format, data)
+
+        # unpack value of length-1 tuples
+        if len(result) == 1:
+            value, = result
+        
         return value
 
-    @classmethod
-    def encode(cls, value):
-        return bytearray(struct.pack(cls.data_format, value))
+    def encode(self, value):
+        return bytearray(struct.pack(self.data_format, value))
 
-    @classmethod
-    def decode_string(cls, string):
+    def decode_string(self, string):
         # default implementation tries to interprete as integer number
         return parseIntAutoBase(string)
 
-    @classmethod
-    def encode_string(cls, value):
+    def encode_string(self, value):
         return str(value)
 
+
+
+class CanDatatypeFloat32(CanDatatypeStruct):
+    def __init__(self):
+        super(CanDatatypeFloat32,self).__init__(CanOpenBasicDatatypes.float32,"<f")
+
+    def decode_string(self, string):
+        num_value = float(string)
+        return num_value
+
 class CanDatatypeBoolean(CanDatatypeStruct):
-    # '<' little endian
-    # '?' bool
-    data_format = "<?"
+    def __init__(self):
+        super(CanDatatypeFloat32,self).__init__(CanOpenBasicDatatypes.boolean,"<?")
 
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.boolean
+    def decode_string(self, string):
+        # look for true/false keywords
+        if str.lower(string).strip() == "true":
+            return True
+        elif str.lower(string).strip() == "false":
+            return False
 
-    @classmethod
-    def number_of_bits(cls):
-        return 1
-
-    @classmethod
-    def decode_string(cls, string):
-        # default implementation tries to interprete as integer number
+        # try to interprete as integer number
         num_value = parseIntAutoBase(string)
         
-        if num_value is None:
+        if num_value is None: # interpretation failed
             return None
         else:
             return num_value != 0 # c interpretation of bool
 
-class CanDatatypeInt8(CanDatatypeStruct):
-    # '<' little endian
-    # 'b' signed char(int8)
-    data_format = "<b"
+class CanDatatypePDOMapping(CanDatatype):
+    def __init__(self, node, identifier, num_mapped=0, mappings=list()):
+        '''
+        @summary: Can data type representing a pdo mapping
+        @param identifier:                 specifies can datatype identifier 
+        @param num_mapped:       number of currently mapped objects         
+        @param mappings:         list of currently mapped object identifiers
 
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.int8
+        max_num_mappings will be constant after initialization
+        num_mapped & max_num_mappings can still be updated (to remap the pdo)
+        '''
+        self.node = node
+        self.canopen = node.canopen
+        self._identifier = identifier
+        self._num_mapped = num_mapped
+        self.mappings = [0]*64 # max 64 mappings 301_v04020005_cor3.pdf pg. 93
+        for k,mapping in enumerate(mappings)
+            self.mappings[k] = mapping
 
-    @classmethod
-    def number_of_bits(cls):
-        return 8
+    def identifier(self):
+        return self._identifier
 
+    def number_of_bits(self):
+        return self._number_of_bits
+    
+    @property
+    def num_mapped(self):
+        return self._num_mapped
 
+    @num_mapped.setter
+    def num_mapped(self,v):
+        if 0 <= v <= self.max_num_mappings:
+            self._num_mapped = v
+        else:
+            raise ValueError()
 
-class CanDatatypeInt16(CanDatatypeStruct):
-    # '<' little endian
-    # 'h' signed short (int16)
-    data_format = "<h"
+    @property
+    def data_format(self):
+        result  = ""
+        for obj_id in self.mappings[:self.num_mapped]:
+            datatype = self.node.obj_dict.objects[obj_id].datatype
+            if not hasattr(datatype,"_data_format"):
+                raise RuntimeError()
+            result += datatype._data_format
+        return "<" + result
+    
 
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.int16
+    def decode(self, data):
+        obj_values = struct.unpack_from(self.data_format, data)
+        return obj_values
 
-    @classmethod
-    def number_of_bits(cls):
-        return 16
+    def encode(self, obj_values):
+        return bytearray(struct.pack(self.data_format, obj_values))
 
-class CanDatatypeInt32(CanDatatypeStruct):
-    # '<' little endian
-    # 'i' signed int (int32)
-    data_format = "<i"
+    def decode_string(self, string):
+        raise RuntimeError()
 
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.int32
+    def encode_string(self, value):
+        raise RuntimeError()
 
-    @classmethod
-    def number_of_bits(cls):
-        return 32
-
-class CanDatatypeUInt8(CanDatatypeStruct):
-    # '<' little endian
-    # 'b' unsigned char(uint8)
-    data_format = "<B"
-
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.uint8
-
-    @classmethod
-    def number_of_bits(cls):
-        return 8
-
-class CanDatatypeUInt16(CanDatatypeStruct):
-    # '<' little endian
-    # 'H' unsigned short (uint16)
-    data_format = "<H"
-
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.uint16
-
-    @classmethod
-    def number_of_bits(cls):
-        return 16
-
-class CanDatatypeUInt32(CanDatatypeStruct):
-    # '<' little endian
-    # 'I' unsigned int (uint32)
-    data_format = "<I"
-
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.uint32
-
-    @classmethod
-    def number_of_bits(cls):
-        return 32
-
-class CanDatatypeFloat32(CanDatatypeStruct):
-    # '<' little endian
-    # 'f' single precision floating point (float)
-    data_format = "<f"
-
-    @classmethod
-    def identifier(cls):
-        return CanOpenBasicDatatypes.float32
-
-    @classmethod
-    def number_of_bits(cls):
-        return 32
-
-    @classmethod
-    def decode_string(cls, string):
-        num_value = float(string)
-        return num_value
 
 class CanDatatypes(object):
     def __init__(self):
-        self.all_datatypes = collect_all_leaf_subclasses(CanDatatype)
+        # generate basic datatypes
+        self.all_datatypes = list()
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.int8,"b"))
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.int16,"h"))
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.int32,"i"))
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.uint8,"B"))
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.uint16,"H"))
+        self.all_datatypes.append(CanDatatypeStruct(CanOpenBasicDatatypes.uint32,"I"))
+        self.all_datatypes.append(CanDatatypeFloat32())
+        self.all_datatypes.append(CanDatatypeBoolean())
+
+        # add datatypes to dictionary mapping from its identifiers
         self.datatypes = dict()
         for datatype in self.all_datatypes:
             self.datatypes[datatype.identifier()] = datatype

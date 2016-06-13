@@ -29,6 +29,7 @@ class CanOpenBasicDatatypes(Enum):
     uint16 = 0x0006
     uint32 = 0x0007
     float32 = 0x0008
+    pdo_mapping = 0x0021
 
 class CanOpenMessageType(Enum):
     not_specified = 0
