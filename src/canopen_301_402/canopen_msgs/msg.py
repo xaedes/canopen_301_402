@@ -7,7 +7,7 @@ from canopen_301_402.constants import *
 from canopen_301_402.canopen_301.cob import CanOpenId
 
 class CanOpenMessage(object):
-    def __init__(self, function_code, node_id, service, data):
+    def __init__(self, function_code, node_id, service, data, request=False):
         '''
         @summary: Represents a higher level interpretation of a regular can message
         
@@ -27,10 +27,15 @@ class CanOpenMessage(object):
         else:
             self._broadcast = False
         self._data = data
+        self._request = request
 
     @property
     def node_id(self):
         return self._node_id
+
+    @property
+    def request(self):
+        return self._request
         
     @property
     def function_code(self):
@@ -55,7 +60,7 @@ class CanOpenMessage(object):
         else:
             arbitration_id = CanOpenId.encode(self.function_code, self.node_id)
 
-        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False)
+        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False,is_remote_frame=self.is_remote_frame)
 
     @classmethod
     def from_can_msg(cls, msg, canopen):
@@ -67,5 +72,5 @@ class CanOpenMessage(object):
 
         service = connection_set.determine_service(function_code, node_id)
 
-        return CanOpenMessage(function_code,node_id,service,msg.data)
+        return CanOpenMessage(function_code,node_id,service,msg.data,request=msg.is_remote_frame)
         
