@@ -23,6 +23,9 @@ class CanOpen402(object):
 
         self.statusword.signal_value_updated.register(self._on_statusword_update)
 
+        self.signal_enter_state = dict()
+        for state in Can402State:
+            self.signal_enter_state[state] = Signal()
 
 
     def populate_with_defaults(self):
@@ -51,9 +54,10 @@ class CanOpen402(object):
         # todo: change state
         for state,bits in Can402StatuswordStateBits.iteritems():
             mask = Can402StatuswordStateMasks[state]
-            if ((self.statusword.value & mask) & bits) == bits:
-                print "changed state to", state
+            if (self.statusword.value & mask) == bits:
                 self.state = state
+                self.signal_enter_state[state].dispatch()
+                break
 
     def set_mode(self, mode, callback_complete=None):
         '''
@@ -143,16 +147,16 @@ class CanOpen402(object):
         state = self.controlword.value
 
         if relative:
-            state |= Can402ControlwordBits.abs_rel << 1
+            state |= int(Can402ControlwordBits.abs_rel) << 1
         else:
-            state &= ~(Can402ControlwordBits.abs_rel << 1)
+            state &= ~(int(Can402ControlwordBits.abs_rel) << 1)
 
-        state |= Can402ControlwordBits.new_set_point << 1
+        state |= int(Can402ControlwordBits.new_set_point) << 1
         
         if immediatly:
-            state |= Can402ControlwordBits.change_set_immediately << 1
+            state |= int(Can402ControlwordBits.change_set_immediately) << 1
         else:
-            state &= ~(Can402ControlwordBits.change_set_immediately << 1)
+            state &= ~(int(Can402ControlwordBits.change_set_immediately) << 1)
 
         data = [state & 0xFF, (state >> 8) & 0xFF]
 
@@ -164,3 +168,12 @@ class CanOpen402(object):
             data)
 
         self.canopen.send_msg(msg)
+
+    def current_status(self):
+        value = self.statusword.value
+        if value is None: return None
+
+        result = dict()
+        for item in Can402StatuswordBits:
+            result[item.name] = ((value & (1 << item.value)) == (1 << item.value))
+        return result
