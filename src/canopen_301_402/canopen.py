@@ -41,6 +41,9 @@ class CanOpen(can.Listener):
         # set up predefined connection set, mapping canopen services to function codes
         self.connection_set = ConnectionSet()
 
+        self.collect_messages = True
+        self.collected_messages = list()
+
     def get_node(self, node_id):
         if self.nodes[node_id] is None:
             self.nodes[node_id] = self.init_node(node_id)
@@ -105,6 +108,9 @@ class CanOpen(can.Listener):
         # parse message into higher level canopen message types
         if type(msg) == CanOpenMessage:
             msg = self.msgs.try_to_upgrage_canopen_message(msg)
+
+        if self.collect_messages:
+            self.collected_messages.append(msg)
 
         # print "msg type: ", type(msg)
         # print msg.__dict__
