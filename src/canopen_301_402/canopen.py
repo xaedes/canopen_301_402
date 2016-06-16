@@ -81,9 +81,10 @@ class CanOpen(can.Listener):
         @param msg: CanOpenMessage or subclass
         @result: 
         '''
+        self.on_message_received(msg)
+
         self.bus.send(msg.to_can_msg())
 
-        self.on_message_received(msg)
 
         # print msg.__dict__
 
