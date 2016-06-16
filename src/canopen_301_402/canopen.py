@@ -117,12 +117,19 @@ class CanOpen(can.Listener):
         # print ""
         
         # route canopen message to responsible service
-        node = self.get_node(msg.node_id)
-        service = node.services[msg.service]
+        if msg.broadcast:
+            for node in self.nodes.itervalues():
+                service = node.services[msg.service]
+                if service is not None:
+                    service.process_msg(msg)
+        else:
+            
+            node = self.get_node(msg.node_id)
+            service = node.services[msg.service]
 
-        # print "service",service
-        if service is not None:
-            service.process_msg(msg)
+            # print "service",service
+            if service is not None:
+                service.process_msg(msg)
 
         # print ""
         # print ""
