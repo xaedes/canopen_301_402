@@ -30,7 +30,7 @@ class CanOpenMessageSdoReadResponse(CanOpenMessage):
         sdo_upload_response = ((4-len_read_data)<<2) | CanData.sdo_upload_response
 
 
-        data = ([CanData.sdo_upload_response, # specifies, that we want to read value from object dictionary
+        data = ([sdo_upload_response, # specifies, that we want to read value from object dictionary
                 (index & 0xff),        # index low byte
                 (index >> 8),          # index high byte
                 subindex] +             # 8 bit subindex
@@ -73,7 +73,7 @@ class CanOpenMessageSdoReadResponse(CanOpenMessage):
 
             index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
-            len_response_data = 4-(msg.data[0] >> 2) & 0b11
+            len_response_data = 4-((msg.data[0] >> 2) & 0b11)
             data = msg.data[4:4+len_response_data]
 
             return CanOpenMessageSdoReadResponse(canopen, msg.node_id, index, subindex, data)
