@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+import can
+
 def set_timeout(timeout,callback):
     '''
     @summary: calls a function after a specified number of seconds
@@ -61,4 +63,57 @@ class HistoryListener(can.Listener):
     def on_message_received(self,msg):
         self.msgs.append(msg)
         
+def str_to_can_msg(string):
+    '''
+    @summary:      Converts string to can.Message
+    @param string: has same format as linux tool "cansend". e.g. '601#01.01.01.01'
+    @result:      can.Message
+    '''
+
+    # remove not allowed characters
+    allowed = "0123456789.#RABCDEF"
+    string = string.upper()
+    string = ''.join([char for char in string if char in allowed])
+
+    hashidx = string.index("#")
+    head = string[:hashidx]
+    body = string[hashidx+1:]
+
+
+    arb_id = int(head,16)
+    if body == "R":
+        data = []
+        req = True    
+    else:
+        data = body.split(".")
+        data = [int(item,16) for item in data]
+        req = False
+
+    msg = can.Message(extended_id=False,arbitration_id=arb_id,data=data,is_remote_frame=req)
+
+    return msg
+
+
+
+def can_msg_to_str(msg):
+    '''
+    @summary: Converts can.Message to string
+    @param msg: can.Message
+    @result:    has same format as linux tool "cansend". e.g. '601#01.01.01.01'
+    '''
+    head = hex(msg.arbitration_id)[2:]
+    if msg.is_remote_frame:
+        body = "R"
+    else:
+        body = []
+        for byte in msg.data:
+            str_byte = hex(byte)[2:]
+            if len(str_byte) < 2:
+                str_byte = ((2-len(str_byte)) * "0") + str_byte
+                body.append(str_byte)
         
+        body = ".".join(body)
+
+    result = (head+"#"+body).upper()
+    return result
+
