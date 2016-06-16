@@ -11,7 +11,8 @@ class CanOpenObject(object):
         self.index = index
         self.subindex = subindex
 
-        self.node.sdo.signal_read_complete[(self.index,self.subindex)].register(self._on_sdo_read_complete)
+        self.node.sdo.signal_read_complete[(self.index,self.subindex)].register(self._update_raw_data)
+        self.node.sdo.signal_write_complete[(self.index,self.subindex)].register(self._update_raw_data)
 
         self.datatype_id = 0x0
         self._value = None
@@ -25,7 +26,7 @@ class CanOpenObject(object):
 
         self.signal_value_updated = Signal()
         
-    def _on_sdo_read_complete(self,raw_data):
+    def _update_raw_data(self,raw_data):
         self._raw_data = raw_data
         if self.datatype is not None:
             self._value = self.datatype.decode(bytearray(self._raw_data))
