@@ -64,5 +64,6 @@ def test_str_to_can_msg():
 def test_can_msg_to_str():
     assert "123#R" == can_msg_to_str(can.Message(extended_id=False,is_remote_frame=True,arbitration_id=0x123))
     assert "234#" == can_msg_to_str(can.Message(extended_id=False,arbitration_id=0x234,data=[]))
+    assert "035#0A" == can_msg_to_str(can.Message(extended_id=False,arbitration_id=0x35,data=[0x0A]))
     assert "345#0A" == can_msg_to_str(can.Message(extended_id=False,arbitration_id=0x345,data=[0x0A]))
-    assert "456#0A.0B.0C.0D.0E.0F.00.01" == can_msg_to_str(can.Message(extended_id=False,arbitration_id=0x456,data=[0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x00,0x01]))
+    assert "456#0A.0B.0C.0D.0E.0F.00.01" == can_msg_to_str(can.Message(extended_id=False,arbitration_id=0x456,data=bytearray([0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x00,0x01])))
