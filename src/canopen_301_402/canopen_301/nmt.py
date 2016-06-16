@@ -35,3 +35,19 @@ class CanOpenNetworkManagement(CanOpenServiceBaseClass):
             
 
                 print "changed 301 state to",self.node.state
+
+    def start_remote_node(self):
+        msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.start_remote_node)
+        self.canopen.send_msg(msg)
+    def enter_pre_operational(self):
+        msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.enter_pre_operational)
+        self.canopen.send_msg(msg)
+    def stop_remote_node(self):
+        msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.stop_remote_node)
+        self.canopen.send_msg(msg)
+    def reset_node(self):
+        msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.reset_node)
+        self.canopen.send_msg(msg)
+    def reset_communication(self):
+        msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.reset_communication)
+        self.canopen.send_msg(msg)
