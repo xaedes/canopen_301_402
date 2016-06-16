@@ -17,16 +17,10 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
         service = CanOpenService.nmt
         function_code = self.connection_set.determine_function_code(service)
         node_id = 0
-
-        data = [] # i thought [] as data would be request, but it wont work
-
-        # todo: this does not seem to create a proper remote request
-        # candump vcan0
-        #   vcan0  000   [0]  remote request    # it should look like this
-        #   vcan0  000   [0]                    # this is the current output
+        data = [] 
 
         # initialize CanOpenMessage
-        super(CanOpenMessageNmtRequest, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageNmtRequest, self).__init__(function_code, node_id, service, data) 
     
     def to_can_msg(self):
         '''
@@ -36,8 +30,9 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
 
         # node_id must always be zero for nmt messages
         arbitration_id = CanOpenId.encode(self.function_code, 0)
-            
-        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False)
+        
+        # can request <=> is_remote_frame=True
+        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False,is_remote_frame=True)
 
     @classmethod
     def try_from_canopen_msg(cls, msg, canopen):
@@ -51,7 +46,7 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
 
         if ((msg.service == CanOpenService.nmt) and
             (msg.node_id == 0) and 
-            (len(msg.data) == 0)): # todo add proper check for request
+            msg.is_remote_frame): 
 
             return CanOpenMessageNmtRequest(canopen)
 
