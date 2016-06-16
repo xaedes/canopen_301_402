@@ -10,6 +10,13 @@ from canopen_301_402.canopen_301.cob import CanOpenId
 class CanOpenMessageNmtCommand(CanOpenMessage):
     """docstring for CanOpenMessageNmtCommand"""
     def __init__(self, canopen, node_id, command):
+        '''
+        @summary: 
+        @param canopen: CanOpen instance
+        @param node_id: 7 bit node id
+        @param command: Can301StateCommand
+        @result: CanOpenMessageNmtCommand
+        '''
         self.canopen = canopen
 
         # nmt message always uses default connection set (hence 0)
@@ -53,7 +60,7 @@ class CanOpenMessageNmtCommand(CanOpenMessage):
 
         if ((msg.service == CanOpenService.nmt) and
             (msg.node_id == 0) and 
-            (len(msg.data) == 2)):
+            (len(msg.data) >= 2)):
 
             node_id = msg.data[1] 
             command_bits = msg.data[0]

@@ -68,10 +68,10 @@ class CanOpenMessageSdoReadResponse(CanOpenMessage):
 
         if ((msg.service == CanOpenService.sdo_tx) and
             (msg.node_id > 0) and  
-            (len(msg.data) == 8) and
+            (len(msg.data) >= 4) and
             ((msg.data[0] & CanData.sdo_upload_response) == CanData.sdo_upload_response)):
 
-            index = msg.data[1] + msg.data[2] << 8
+            index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
             len_response_data = 4-(msg.data[0] >> 2) & 0b11
             data = msg.data[4:4+len_response_data]

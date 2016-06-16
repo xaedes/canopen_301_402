@@ -35,7 +35,7 @@ class CanOpenMessageNmtBootup(CanOpenMessage):
 
         if ((msg.service == CanOpenService.nmt_error_control) and
             (msg.node_id > 0) and 
-            (len(msg.data) == 1) and 
+            (len(msg.data) >= 1) and 
             (msg.data[0] == 0)):
 
             return CanOpenMessageNmtBootup(canopen, msg.node_id)

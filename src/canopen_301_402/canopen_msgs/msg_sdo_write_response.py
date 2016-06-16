@@ -53,10 +53,10 @@ class CanOpenMessageSdoWriteResponse(CanOpenMessage):
 
         if ((msg.service == CanOpenService.sdo_tx) and
             (msg.node_id > 0) and 
-            (len(msg.data) == 8) and 
+            (len(msg.data) >= 4) and 
             (msg.data[0] == CanData.sdo_download_response)):
 
-            index = msg.data[1] + msg.data[2] << 8
+            index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
 
             return CanOpenMessageSdoWriteResponse(canopen, msg.node_id, index, subindex)

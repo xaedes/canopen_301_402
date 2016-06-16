@@ -55,11 +55,20 @@ class CanOpenMessageSdoReadRequest(CanOpenMessage):
 
         if ((msg.service == CanOpenService.sdo_rx) and
             (msg.node_id > 0) and  
-            (len(msg.data) == 8) and
+            (len(msg.data) >= 4) and
             (msg.data[0] == CanData.sdo_upload_request)):
 
-            index = msg.data[1] + msg.data[2] << 8
+
+            print hex(msg.data[0])
+            print hex(msg.data[1])
+            print hex(msg.data[2])
+            print hex(msg.data[3])
+
+            index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
+
+            print hex(index)
+            print hex(subindex)
 
             return CanOpenMessageSdoReadRequest(canopen, msg.node_id, index, subindex)
 

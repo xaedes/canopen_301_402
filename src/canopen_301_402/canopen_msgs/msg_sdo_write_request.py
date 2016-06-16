@@ -73,7 +73,7 @@ class CanOpenMessageSdoWriteRequest(CanOpenMessage):
 
         if ((msg.service == CanOpenService.sdo_rx) and
             (msg.node_id > 0) and 
-            (len(msg.data) == 8)):
+            (len(msg.data) >= 4)):
 
             len_write_data = None
             if (msg.data[0] == (CanData.sdo_download_request_bits-1)):
@@ -83,7 +83,7 @@ class CanOpenMessageSdoWriteRequest(CanOpenMessage):
             else:
                 return None
 
-            index = msg.data[1] + msg.data[2] << 8
+            index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
             write_data = msg.data[4:4+len_write_data]
 

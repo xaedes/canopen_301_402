@@ -63,10 +63,10 @@ class CanOpenMessageSdoError(CanOpenMessage):
 
         if ((msg.service == CanOpenService.sdo_rx) and
             (msg.node_id > 0) and 
-            (len(msg.data) == 8) and 
+            (len(msg.data) >= 8) and 
             (msg.data[0] == CanData.sdo_error)):
 
-            index = msg.data[1] + msg.data[2] << 8
+            index = msg.data[1] + (msg.data[2] << 8)
             subindex = msg.data[3]
 
             error_code = msg.data[4] | (msg.data[5]<<8) | (msg.data[6]<<16) | (msg.data[7]<<24)
