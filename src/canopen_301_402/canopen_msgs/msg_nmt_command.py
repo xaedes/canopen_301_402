@@ -35,6 +35,9 @@ class CanOpenMessageNmtCommand(CanOpenMessage):
 
     @property
     def command(self):
+        '''
+        @summary: Can301StateCommand
+        '''
         return self._command
     
     def to_can_msg(self):
