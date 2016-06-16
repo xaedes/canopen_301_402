@@ -239,7 +239,7 @@ Can402StatuswordStateMasks = dict({
     Can402State.fault                   : 0b1001111
     })
 
-class Can402ControlwordBits(object):
+class Can402ControlwordBits(Enum):
     switch_on = 0
     enable_voltage = 1
     quick_stop = 2
@@ -250,7 +250,7 @@ class Can402ControlwordBits(object):
     fault_reset = 7
     halt = 8
 
-class Can402StatuswordBits(object):
+class Can402StatuswordBits(Enum):
     ready_to_switch_on = 0
     switched_on = 1
     operation_enabled = 2
