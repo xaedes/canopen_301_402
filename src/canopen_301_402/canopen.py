@@ -11,7 +11,7 @@ from canopen_301_402.node import CanOpenNode
 from canopen_301_402.canopen_301.cob import CanOpenId
 from canopen_301_402.canopen_301.broadcast import CanOpenBroadcast
 from canopen_301_402.canopen_msgs.msg import CanOpenMessage
-from canopen_301_402.canopen_msgs.msgs import CanOpenMessages
+from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.datatypes import CanDatatypes
 from canopen_301_402.canopen_301.connection_set import ConnectionSet
 
@@ -123,6 +123,6 @@ class CanOpen(can.Listener):
         # print ""
 
     def start_remote_nodes(self):
-        msg = self.msgs.nmt(node_id=0,command=Can301StateCommandBits.start_remote_node)
+        msg = CanOpenMessageNmtCommand(self,node_id=0,command=Can301StateCommand.start_remote_node)
         self.send_msg(msg)
 
