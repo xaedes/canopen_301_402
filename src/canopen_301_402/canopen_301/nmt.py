@@ -7,7 +7,6 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.assertions import Assertions
-from canopen_301_402.canopen_301.state import Can301State,Can301StateTransitions
 from canopen_301_402.canopen_msgs.msg import CanOpenMessage
 from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
