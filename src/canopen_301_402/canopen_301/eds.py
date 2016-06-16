@@ -105,10 +105,25 @@ class EdsObject(object):
             self.datatype = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
             # todo map access_type string to CanOpenObjectAttribute 
-            try:
-                self.default_value = parseIntAutoBase(dictionary["DefaultValue"])
-            except:
+                
+            if dictionary["DefaultValue"] is None:
+                self.default_value = None
+            elif CanOpenBasicDatatypes(self.datatype) == CanOpenBasicDatatypes.vis_str:
                 self.default_value = dictionary["DefaultValue"]
+            elif CanOpenBasicDatatypes(self.datatype) in [CanOpenBasicDatatypes.boolean,
+                                   CanOpenBasicDatatypes.int8,
+                                   CanOpenBasicDatatypes.int16,
+                                   CanOpenBasicDatatypes.int32,
+                                   CanOpenBasicDatatypes.uint8,
+                                   CanOpenBasicDatatypes.uint16,
+                                   CanOpenBasicDatatypes.uint32]:
+
+                if "$NODEID" in str.upper(dictionary["DefaultValue"]):
+                    self.default_value = dictionary["DefaultValue"] # todo parse this
+                else:
+                    self.default_value = parseIntAutoBase(dictionary["DefaultValue"])
+            elif CanOpenBasicDatatypes(self.datatype) == CanOpenBasicDatatypes.float32:
+                self.default_value = float(dictionary["DefaultValue"])
             
             self.low_limit = parseIntAutoBase(dictionary["LowLimit"])
             self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
