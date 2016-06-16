@@ -14,11 +14,17 @@ class Operations(object):
         # sort step methods
         for k in sorted(l):
             self.operations.append(getattr(self,k))
-        self.operations.append(self.done)
         
+    def start(self):
+        self.current_op = 0
+        self.operations[self.current_op]()        
+
     def next_operation(self):
-        self.operations[self.current_op]()
+        if self.current_op+1 > len(self.operations):
+            done()
+
         self.current_op += 1
+        self.operations[self.current_op]()
 
     def done(self):
         pass
