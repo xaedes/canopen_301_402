@@ -7,7 +7,7 @@ from flufl.enum import Enum
 
 from canopen_301_402.utils import parseIntAutoBase
 
-from canopen_301_402.constants import CanOpenBasicDatatypes
+from canopen_301_402.constants import *
 
 
 class EdsFileInfo(object):
