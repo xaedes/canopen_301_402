@@ -31,7 +31,7 @@ class CanOpenNetworkManagement(CanOpenServiceBaseClass):
             # change state according to nmt command
             if self.node.state in Can301StateTransitions:
                 transitions = Can301StateTransitions[self.node.state]
-                self.node.state = transitions[command]
+                self.node.state = transitions[msg.command]
             
 
                 print "changed 301 state to",self.node.state
