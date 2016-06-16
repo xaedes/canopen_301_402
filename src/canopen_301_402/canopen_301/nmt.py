@@ -11,6 +11,7 @@ from canopen_301_402.canopen_msgs.msg import CanOpenMessage
 from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.service import CanOpenServiceBaseClass
 
+from canopen_301_402.signal import Signal
 
 class CanOpenNetworkManagement(CanOpenServiceBaseClass):
     '''
@@ -19,22 +20,30 @@ class CanOpenNetworkManagement(CanOpenServiceBaseClass):
     def __init__(self, *args, **kwargs):
         super(CanOpenNetworkManagement, self).__init__(*args, **kwargs)
 
+        self.signal_bootup = Signal()
+        self.signal_enter_state = dict()
+        self.signal_enter_state[Can301State.initialisation] = Signal()
+        self.signal_enter_state[Can301State.pre_operational] = Signal()
+        self.signal_enter_state[Can301State.operational] = Signal()
+        self.signal_enter_state[Can301State.stopped] = Signal()
+
     def process_msg(self, msg):
         if isinstance(msg, CanOpenMessageNmtBootup):
             # device starts in state initialization
             # boot up message signals end of initialization
             if self.node.state == Can301State.initialisation:
                 self.node.state = Can301State.pre_operational
-                print "changed 301 state to",self.node.state
+
+                self.signal_bootup.dispatch()
+                self.signal_enter_state[self.node.state].dispatch()
                 
         elif isinstance(msg, CanOpenMessageNmtCommand):
             # change state according to nmt command
             if self.node.state in Can301StateTransitions:
                 transitions = Can301StateTransitions[self.node.state]
                 self.node.state = transitions[msg.command]
-            
-
-                print "changed 301 state to",self.node.state
+                
+                self.signal_enter_state[self.node.state].dispatch()
 
     def start_remote_node(self):
         msg = CanOpenMessageNmtCommand(self.canopen, self.node.node_id, Can301StateCommand.start_remote_node)
