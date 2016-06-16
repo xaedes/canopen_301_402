@@ -47,11 +47,11 @@ class CanOpen402(object):
         self.node.obj_dict.objects[Can402Objects.target_position].datatype_id = CanOpenBasicDatatypes.int32
 
 
-    def _on_statusword_update(self, raw_data):
+    def _on_statusword_update(self):
         # todo: change state
         for state,bits in Can402StatuswordStateBits.iteritems():
             mask = Can402StatuswordStateMasks[state]
-            if (self.statusword.value & mask & bits) == bits:
+            if ((self.statusword.value & mask) & bits) == bits:
                 print "changed state to", state
                 self.state = state
 
