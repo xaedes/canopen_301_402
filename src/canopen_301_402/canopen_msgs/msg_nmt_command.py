@@ -69,7 +69,7 @@ class CanOpenMessageNmtCommand(CanOpenMessage):
             command_bits = msg.data[0]
             command = None
             for _command,bits in Can301StateCommandBits.iteritems():
-                if command_bits & bits == bits:
+                if command_bits == bits:
                     command = _command
                     break
             
