@@ -19,12 +19,12 @@ class Operations(object):
         self.current_op = 0
         self.operations[self.current_op]()        
 
-    def next_operation(self):
-        if self.current_op+1 > len(self.operations):
-            done()
-
+    def next_operation(self,*args,**kwargs):
         self.current_op += 1
-        self.operations[self.current_op]()
+        if self.current_op < len(self.operations):
+            self.operations[self.current_op]()
+        else:
+            self.done()
 
     def done(self):
         pass
