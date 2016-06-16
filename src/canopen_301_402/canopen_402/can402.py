@@ -101,12 +101,12 @@ class CanOpen402(object):
         data = [state & 0xFF, (state >> 8) & 0xFF]
 
 
-        def value_updated(raw_data):
+        def value_updated(*args):
             self.state = new_state
             if callable(callback_complete):
                 callback_complete()
 
-        self.node.obj_dict.objects[Can402Objects.controlword].signal_value_updated.register_once(value_updated)
+        self.node.sdo.signal_write_complete[Can402Objects.controlword].register_once(value_updated)
 
         msg = CanOpenMessageSdoWriteRequest(
             self.canopen, 
