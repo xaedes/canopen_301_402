@@ -60,7 +60,7 @@ class CanOpenMessage(object):
         else:
             arbitration_id = CanOpenId.encode(self.function_code, self.node_id)
 
-        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False,is_remote_frame=self.is_remote_frame)
+        return can.Message(arbitration_id=arbitration_id,data=self.data,extended_id=False,is_remote_frame=self.request)
 
     @classmethod
     def from_can_msg(cls, msg, canopen):
