@@ -13,7 +13,7 @@ def test_obj_signal_value_updated():
     callback = mock.MagicMock()
 
     bus = can.interface.Bus('vcan0', bustype='socketcan_ctypes')
-    canopen=CanOpen(bus,eds_config)
+    canopen = CanOpen(bus,eds_config)
     
     node = canopen.get_node(1)
 
