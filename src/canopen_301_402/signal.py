@@ -22,4 +22,4 @@ class Signal(object):
             callback(*args, **kwargs)
         for callback in self.callbacks_once:
             callback(*args, **kwargs)
-
+        self.callbacks_once = list()
