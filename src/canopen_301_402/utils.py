@@ -53,3 +53,12 @@ def parseIntAutoBase(string):
         base = 10
 
     return int(string,base)
+
+
+class HistoryListener(can.Listener):
+    def __init__(self):
+        self.msgs = list()
+    def on_message_received(self,msg):
+        self.msgs.append(msg)
+        
+        
