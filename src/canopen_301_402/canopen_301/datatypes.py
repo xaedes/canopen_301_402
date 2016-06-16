@@ -121,7 +121,7 @@ class CanDatatypeStruct(CanDatatype):
 
 class CanDatatypeFloat32(CanDatatypeStruct):
     def __init__(self):
-        super(CanDatatypeFloat32,self).__init__(CanOpenBasicDatatypes.float32,"<f")
+        super(CanDatatypeFloat32,self).__init__(CanOpenBasicDatatypes.float32,"f")
 
     def decode_string(self, string):
         num_value = float(string)
@@ -129,7 +129,7 @@ class CanDatatypeFloat32(CanDatatypeStruct):
 
 class CanDatatypeBoolean(CanDatatypeStruct):
     def __init__(self):
-        super(CanDatatypeFloat32,self).__init__(CanOpenBasicDatatypes.boolean,"<?")
+        super(CanDatatypeBoolean,self).__init__(CanOpenBasicDatatypes.boolean,"?")
 
     def decode_string(self, string):
         # look for true/false keywords
@@ -162,7 +162,7 @@ class CanDatatypePDOMapping(CanDatatype):
         self._identifier = identifier
         self._num_mapped = num_mapped
         self.mappings = [0]*64 # max 64 mappings 301_v04020005_cor3.pdf pg. 93
-        for k,mapping in enumerate(mappings)
+        for k,mapping in enumerate(mappings):
             self.mappings[k] = mapping
 
     def identifier(self):
