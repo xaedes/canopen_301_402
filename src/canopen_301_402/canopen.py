@@ -6,6 +6,7 @@ from collections import defaultdict
 import can
 
 from canopen_301_402.constants import *
+from canopen_301_402.utils import *
 from canopen_301_402.assertions import Assertions
 from canopen_301_402.node import CanOpenNode
 from canopen_301_402.canopen_301.cob import CanOpenId
@@ -14,6 +15,13 @@ from canopen_301_402.canopen_msgs.msg import CanOpenMessage
 from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.datatypes import CanDatatypes
 from canopen_301_402.canopen_301.connection_set import ConnectionSet
+
+TRACE = True
+
+if TRACE:
+    import hunter
+    hunter.trace(module_contains="canopen_301_402")
+
 
 
 eds_config = defaultdict(lambda:None,{
@@ -98,9 +106,13 @@ class CanOpen(can.Listener):
 
 
     def on_message_received(self, msg):
-        # print "on_message_received"
+        if TRACE:
+            hunter.trace(module_contains="canopen_301_402")
+
+        print "on_message_received"
         # print "--"
         # print "raw", msg
+
 
         # convert message to canopen message
         if type(msg) == can.Message:
@@ -109,6 +121,8 @@ class CanOpen(can.Listener):
         # parse message into higher level canopen message types
         if type(msg) == CanOpenMessage:
             msg = self.msgs.try_to_upgrage_canopen_message(msg)
+
+        print can_msg_to_str(msg.to_can_msg())
 
         if self.collect_messages:
             self.collected_messages.append(msg)
