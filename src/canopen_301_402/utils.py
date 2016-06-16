@@ -101,16 +101,20 @@ def can_msg_to_str(msg):
     @param msg: can.Message
     @result:    has same format as linux tool "cansend". e.g. '601#01.01.01.01'
     '''
-    head = hex(msg.arbitration_id)[2:]
+    head = hex(int(msg.arbitration_id))[2:]
+    
+    if len(head) < 3:
+        head = ((3-len(head)) * "0") + head
+
     if msg.is_remote_frame:
         body = "R"
     else:
         body = []
-        for byte in msg.data:
+        for byte in list(msg.data):
             str_byte = hex(byte)[2:]
             if len(str_byte) < 2:
                 str_byte = ((2-len(str_byte)) * "0") + str_byte
-                body.append(str_byte)
+            body.append(str_byte)
         
         body = ".".join(body)
 
