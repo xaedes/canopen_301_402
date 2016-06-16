@@ -4,6 +4,91 @@
 from canopen_301_402.constants import *
 from canopen_301_402.canopen_msgs.msgs import *
 from canopen_301_402.canopen_301.obj import CanOpenObject
+from canopen_301_402.signal import Signal
+
+from canopen_301_402.operations import Operations
+
+
+class SetTargetPosition(Operations):
+    def __init__(self, node, value, relative=False, immediatly=False):
+        self.node = node
+        self.canopen = node.canopen
+
+        self.value = value
+        self.relative = relative
+        self.immediatly = immediatly
+
+        super(SetTargetPosition, self).__init__()
+
+    def step1(self):
+        print "step1"
+        self.node.sdo.signal_write_complete[Can402Objects.target_position].register_once(self.next_operation)
+
+        # set target position value
+        data = self.node.can402.target_position.datatype.encode(self.value)
+        msg = CanOpenMessageSdoWriteRequest(
+            self.canopen, 
+            self.node.node_id, 
+            Can402Objects.target_position[0], 
+            Can402Objects.target_position[1], 
+            data)
+        self.canopen.send_msg(msg)
+
+    def step2(self):
+        print "step2"
+        self.node.sdo.signal_write_complete[Can402Objects.controlword].register_once(self.next_operation)
+
+        # notify device of new target by setting controlword
+        state = self.node.can402.controlword.value
+
+        if self.relative:
+            state |= (1 << Can402ControlwordBits.abs_rel.value)
+        else:
+            state &= ~(1 << Can402ControlwordBits.abs_rel.value)
+
+        state |= (1 << Can402ControlwordBits.new_set_point.value)
+        
+        if self.immediatly:
+            state |= (1 << Can402ControlwordBits.change_set_immediately.value)
+        else:
+            state &= ~(1 << Can402ControlwordBits.change_set_immediately.value)
+
+        data = [state & 0xFF, (state >> 8) & 0xFF]
+
+        msg = CanOpenMessageSdoWriteRequest(
+            self.canopen, 
+            self.node.node_id, 
+            Can402Objects.controlword[0], 
+            Can402Objects.controlword[1], 
+            data)
+
+        self.canopen.send_msg(msg)
+
+        # antwort 
+          # can0  181   [2]  37 10
+          # can0  281   [6]  37 10 05 2F 01 00
+          # can0  381   [6]  37 10 02 00 00 00
+
+
+    def step3(self):
+        print "step3"
+        self.node.sdo.signal_write_complete[Can402Objects.controlword].register_once(self.next_operation)
+
+        # reset new target bit in controlword (dont really know why, but this is mandatory)
+        state = self.node.can402.controlword.value
+        state ^= (1 << Can402ControlwordBits.new_set_point.value)
+
+        data = [state & 0xFF, (state >> 8) & 0xFF]
+
+        msg = CanOpenMessageSdoWriteRequest(
+            self.canopen, 
+            self.node.node_id, 
+            Can402Objects.controlword[0], 
+            Can402Objects.controlword[1], 
+            data)
+
+        self.canopen.send_msg(msg)
+
 
 class CanOpen402(object):
     """docstring for CanOpen402"""
@@ -41,6 +126,8 @@ class CanOpen402(object):
         self.modes_of_operation_set = self.node.obj_dict.objects[Can402Objects.modes_of_operation_set]
         self.modes_of_operation_get = self.node.obj_dict.objects[Can402Objects.modes_of_operation_get]
         self.target_position = self.node.obj_dict.objects[Can402Objects.target_position]
+
+        print self.controlword.eds_obj
 
         # set datatypes
         self.node.obj_dict.objects[Can402Objects.controlword].datatype_id = CanOpenBasicDatatypes.uint16
@@ -121,6 +208,19 @@ class CanOpen402(object):
 
         self.canopen.send_msg(msg)
 
+    def start_homing(self):
+        state = self.controlword.value
+        state |= (1 << Can402ControlwordBits.new_set_point.value)
+        data = [state & 0xFF, (state >> 8) & 0xFF]
+        msg = CanOpenMessageSdoWriteRequest(
+            self.canopen, 
+            self.node.node_id, 
+            Can402Objects.controlword[0], 
+            Can402Objects.controlword[1], 
+            data)
+
+        self.canopen.send_msg(msg)
+
     def set_target_position(self, value, relative=False, immediatly=False):
         '''
         @summary: set new target position in 
@@ -133,41 +233,10 @@ class CanOpen402(object):
         # todo check Voraussetzung: NMT-Zustand „Operational“, Antriebszustand „Operation Enabled“ und Modes of
         # Operation (0x6060) auf Profile Position Mode (1) gesetzt.
 
-        # set target position value
-        data = self.target_position.datatype.encode(value)
-        msg = CanOpenMessageSdoWriteRequest(
-            self.canopen, 
-            self.node.node_id, 
-            Can402Objects.target_position[0], 
-            Can402Objects.target_position[1], 
-            data)
-        self.canopen.send_msg(msg)
+        op = SetTargetPosition(self.node, value, relative, immediatly)
+        op.start()
 
-        # notify device of new target by setting controlword
-        state = self.controlword.value
 
-        if relative:
-            state |= int(Can402ControlwordBits.abs_rel) << 1
-        else:
-            state &= ~(int(Can402ControlwordBits.abs_rel) << 1)
-
-        state |= int(Can402ControlwordBits.new_set_point) << 1
-        
-        if immediatly:
-            state |= int(Can402ControlwordBits.change_set_immediately) << 1
-        else:
-            state &= ~(int(Can402ControlwordBits.change_set_immediately) << 1)
-
-        data = [state & 0xFF, (state >> 8) & 0xFF]
-
-        msg = CanOpenMessageSdoWriteRequest(
-            self.canopen, 
-            self.node.node_id, 
-            Can402Objects.controlword[0], 
-            Can402Objects.controlword[1], 
-            data)
-
-        self.canopen.send_msg(msg)
 
     def current_status(self):
         value = self.statusword.value
