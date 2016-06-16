@@ -46,7 +46,7 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
 
         if ((msg.service == CanOpenService.nmt) and
             (msg.node_id == 0) and 
-            msg.is_remote_frame): 
+            (msg.request == True)): 
 
             return CanOpenMessageNmtRequest(canopen)
 
