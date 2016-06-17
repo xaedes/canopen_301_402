@@ -12,6 +12,13 @@ import Queue
 
 from collections import defaultdict
 
+TRACE = True
+
+if TRACE:
+    import hunter
+    hunter.trace(module_contains="brave_new_world")
+
+
 class CanOpen(can.Listener):
     """docstring for CanOpen"""
     def __init__(self, bus):
@@ -29,7 +36,6 @@ class CanOpen(can.Listener):
         self.enable_history = True
 
     def send(self, msg):
-        print type(msg), msg
         # send can msg
         if isinstance(msg, CanOpenMessage):
             self.bus.send(msg.to_can_msg())
@@ -43,6 +49,7 @@ class CanOpen(can.Listener):
 
 
     def on_message_received(self, msg):
+        hunter.trace(module_contains="brave_new_world")
 
         # convert message to canopen message
         if type(msg) == can.Message:
@@ -51,6 +58,11 @@ class CanOpen(can.Listener):
         # parse message into higher level canopen message types
         if type(msg) == CanOpenMessage:
             msg = self.msgs.try_to_upgrage_canopen_message(msg)
+
+        print "---"
+        print type(msg), msg
+        print msg.__dict__
+        print ""
 
         # history
         if self.enable_history:
