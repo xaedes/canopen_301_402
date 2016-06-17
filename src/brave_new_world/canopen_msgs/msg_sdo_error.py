@@ -13,20 +13,27 @@ class CanOpenMessageSdoError(CanOpenMessage):
     def __init__(self, canopen, node_id, index, subindex, error_code):
 
         self.canopen = canopen
+        # set sdo write request message fields
+        self._index = index
+        self._subindex = subindex
 
         self.connection_set = self.canopen.connection_set
         service = CanOpenService.sdo_tx
         function_code = self.connection_set.determine_function_code(service)
 
-        data = [CanData.sdo_error]
+        data = [CanData.sdo_error,
+                index & 0xff,
+                index >> 8,
+                subindex,
+                error_code & 0xff,
+                (error_code>>8) & 0xff,
+                (error_code>>16) & 0xff,
+                (error_code>>24) & 0xff]
         self._error_code = error_code
 
         # initialize CanOpenMessage
         super(CanOpenMessageSdoError, self).__init__(function_code, node_id, service, data)
         
-        # set sdo write request message fields
-        self._index = index
-        self._subindex = subindex
 
     @property
     def error_code(self):
@@ -58,7 +65,7 @@ class CanOpenMessageSdoError(CanOpenMessage):
         @result: None, if not possible, CanOpenMessageSdoError instance
         '''
 
-        if ((msg.service == CanOpenService.sdo_rx) and
+        if ((msg.service in [CanOpenService.sdo_rx,CanOpenService.sdo_tx]) and
             (msg.node_id > 0) and 
             (len(msg.data) >= 8) and 
             (msg.data[0] == CanData.sdo_error)):
