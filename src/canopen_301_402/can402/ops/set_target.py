@@ -6,12 +6,12 @@ from funcy import partial
 from canopen_301_402.constants import *
 from canopen_301_402.async.async_chain import AsyncChain
 from canopen_301_402.async.sdo_write import SdoWrite
-from canopen_301_402.can402.ops.notify402_new_target import Notify402NewTarget
+from canopen_301_402.can402.ops.notify_new_target import NotifyNewTarget
 
 
 
-class Set402Target(AsyncChain):
-    """docstring for Init402"""
+class SetTarget(AsyncChain):
+    """docstring for SetTarget"""
     def __init__(self, node, value, relative=False, immediatly=False, *args, **kwargs):
         self.node = node
         self.value = value
@@ -32,5 +32,5 @@ class Set402Target(AsyncChain):
 
         operations = [set_target_position, notify_new_target]
 
-        super(Set402Target, self).__init__(node, operations, *args, **kwargs)
+        super(SetTarget, self).__init__(node, operations, *args, **kwargs)
         

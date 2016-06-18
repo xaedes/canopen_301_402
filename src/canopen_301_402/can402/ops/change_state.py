@@ -5,8 +5,8 @@ from canopen_301_402.constants import *
 from canopen_301_402.async.sdo_write import SdoWrite
 
 
-class Change402State(SdoWrite):
-    """docstring for Change402State"""
+class ChangeState(SdoWrite):
+    """docstring for ChangeState"""
     def __init__(self, node, command, *args, **kwargs):
         self.node = node
         self.command = command
@@ -27,15 +27,15 @@ class Change402State(SdoWrite):
         self.controlword = self.controlword | (mask & bits & 0xFFFF)
         data = [self.controlword & 0xFF, (self.controlword >> 8) & 0xFF]
 
-        super(Change402State, self).__init__(node, index, subindex, data, *args, **kwargs)
+        super(ChangeState, self).__init__(node, index, subindex, data, *args, **kwargs)
         
     def do(self):
-        super(Change402State, self).do()
+        super(ChangeState, self).do()
 
     def on_success(self):
         self.node.state402 = self.new_state
         self.node.controlword = self.controlword
 
-        super(Change402State, self).on_success()
+        super(ChangeState, self).on_success()
 
 

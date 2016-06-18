@@ -5,7 +5,7 @@ from canopen_301_402.constants import *
 from canopen_301_402.async.sdo_write import SdoWrite
 
 class ChangeControlword(SdoWrite):
-    """docstring for Set402Mode"""
+    """docstring for ChangeControlword"""
     def __init__(self, node, updates, *args, **kwargs):
         self.node = node
         self.updates = updates

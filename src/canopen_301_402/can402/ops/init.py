@@ -9,11 +9,11 @@ from canopen_301_402.async.async_send import AsyncSend
 from canopen_301_402.async.async_send_and_await import AsyncSendAndAwait
 from canopen_301_402.canopen_msgs.msgs import CanOpenMessageNmtCommand
 from canopen_301_402.canopen_msgs.msgs import CanOpenMessageNmtBootup
-from canopen_301_402.can402.ops.change402_state import Change402State
-from canopen_301_402.can402.ops.set402_mode import Set402Mode
+from canopen_301_402.can402.ops.change_state import ChangeState
+from canopen_301_402.can402.ops.set_mode import SetMode
 
-class Init402(AsyncChain):
-    """docstring for Init402"""
+class Init(AsyncChain):
+    """docstring for Init"""
     def __init__(self, node, *args, **kwargs):
         self.node = node
 
@@ -37,5 +37,5 @@ class Init402(AsyncChain):
 
         operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation, set_mode]
 
-        super(Init402, self).__init__(node, operations, *args, **kwargs)
+        super(Init, self).__init__(node, operations, *args, **kwargs)
         

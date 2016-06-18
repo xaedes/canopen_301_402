@@ -8,8 +8,8 @@ from canopen_301_402.async.async_chain import AsyncChain
 from canopen_301_402.can402.ops.change_controlword import ChangeControlword
 
 
-class Notify402NewTarget(AsyncChain):
-    """docstring for Set402Mode"""
+class NotifyNewTarget(AsyncChain):
+    """docstring for NotifyNewTarget"""
     def __init__(self, node, relative=False, immediatly=False, *args, **kwargs):
         self.node = node
         self.relative = relative
@@ -34,5 +34,5 @@ class Notify402NewTarget(AsyncChain):
         
         operations = [notify, reset]
 
-        super(Notify402NewTarget, self).__init__(node, operations, *args, **kwargs)
+        super(NotifyNewTarget, self).__init__(node, operations, *args, **kwargs)
 

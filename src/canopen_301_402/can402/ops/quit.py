@@ -8,10 +8,10 @@ from canopen_301_402.async.async_chain import AsyncChain
 from canopen_301_402.async.async_send_and_await import AsyncSendAndAwait
 from canopen_301_402.canopen_msgs.msgs import CanOpenMessageNmtCommand
 from canopen_301_402.canopen_msgs.msgs import CanOpenMessageNmtBootup
-from canopen_301_402.can402.ops.change402_state import Change402State
+from canopen_301_402.can402.ops.change_state import ChangeState
 
-class Quit402(AsyncChain):
-    """docstring for Init402"""
+class Quit(AsyncChain):
+    """docstring for Quit"""
     def __init__(self, node, *args, **kwargs):
         self.node = node
 
@@ -26,4 +26,4 @@ class Quit402(AsyncChain):
 
         operations = [shutdown, reset_communication]
 
-        super(Quit402, self).__init__(node, operations, *args, **kwargs)        
+        super(Quit, self).__init__(node, operations, *args, **kwargs)        
