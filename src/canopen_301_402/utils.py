@@ -45,11 +45,16 @@ def parseIntAutoBase(string):
     else:
         offset = 0
 
-    if string[offset:][:2] == "0x":
+
+    starting_on_prefix = string[offset:]
+    octal_digits = ["0","1","2","3","4","5","6","7"]
+    if starting_on_prefix[:2] == "0x":
         base = 16
-    elif string[offset:][:2] == "0o":
+    elif (starting_on_prefix[:2] == "0o") 
+          or ((starting_on_prefix[0] == "0")  # 306_v01030000.pdf pg. 9
+               and (starting_on_prefix[1] in octal_digits)):
         base = 8
-    elif string[offset:][:2] == "0b":
+    elif starting_on_prefix[:2] == "0b":
         base = 2
     else:
         base = 10
