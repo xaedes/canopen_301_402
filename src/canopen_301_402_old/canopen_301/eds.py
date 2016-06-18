@@ -93,9 +93,17 @@ class EdsObject(object):
 
         
         self.parameter_name = dictionary["ParameterName"]
-        self.object_type = parseIntAutoBase(dictionary["ObjectType"])
-        self.object_type = CanOpenObjectType(self.object_type)
-        self.obj_flags = dictionary["ObjFlags"]
+        if dictionary["ObjectType"] is None:
+            # Missing  ObjectType  equals  ObjectType  VAR. (306_v01030000.pdf pg. 15)
+            self.object_type = CanOpenObjectType.var
+        else:
+            self.object_type = parseIntAutoBase(dictionary["ObjectType"])
+            self.object_type = CanOpenObjectType(self.object_type)
+        
+        if dictionary["ObjFlags"] is None:
+            self.obj_flags = 0
+        else:
+            self.obj_flags = dictionary["ObjFlags"]
         
         # object types: (301_v04020005_cor3.pdf pg. 89)
         # 0x00: null - object with no data fields
@@ -105,6 +113,10 @@ class EdsObject(object):
             self.datatype = parseIntAutoBase(dictionary["DataType"])
             self.access_type = dictionary["AccessType"]
             # todo map access_type string to CanOpenObjectAttribute 
+            # 306_v01030000.pdf pg. 15
+            # AccessType for this object, represented by  the  following  strings  ( „ro“ - read  only,  „wo“ -
+            # write  only,  „rw“  -  read/write,  „rwr“  -  read/write  on  process  input,  „rww“  -
+            # read/write on process output, „const“ - constant value)
                 
             if dictionary["DefaultValue"] is None:
                 self.default_value = None
