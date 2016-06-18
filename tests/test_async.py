@@ -1,9 +1,16 @@
 
-from brave_new_world.operations.operation import *
+from canopen_301_402.operations.operation import *
 from time import sleep
 import mock
 
 evt_done_timeout = 2.0
+
+TRACE = True
+
+if TRACE:
+    import hunter
+    hunter.trace(module_contains="canopen_301_402")
+
 
 def test_timeout():
     global evt_done_timeout
@@ -196,9 +203,11 @@ def test_sdo_write_success():
     write = SdoWrite(node,index,subindex,data)
     write.start()
 
-    node.canopen.send.assert_called()
+    assert node.canopen.send.called
+
     msg, = node.canopen.send.call_args[0]
     assert type(msg) == CanOpenMessageSdoWriteRequest
+
     response = CanOpenMessageSdoWriteResponse(node.canopen, node.node_id, index, subindex)
 
     write.process_msg(response)
@@ -219,7 +228,8 @@ def test_sdo_write_fault():
     write = SdoWrite(node,index,subindex,data)
     write.start()
 
-    node.canopen.send.assert_called()
+    assert node.canopen.send.called
+
     msg, = node.canopen.send.call_args[0]
     assert type(msg) == CanOpenMessageSdoWriteRequest
     response = CanOpenMessageSdoError(node.canopen, node.node_id, index, subindex, 0)
@@ -243,7 +253,8 @@ def test_sdo_read_success():
     read = SdoRead(node,index,subindex)
     read.start()
 
-    node.canopen.send.assert_called()
+    assert node.canopen.send.called
+
     msg, = node.canopen.send.call_args[0]
     assert type(msg) == CanOpenMessageSdoReadRequest
     response = CanOpenMessageSdoReadResponse(node.canopen, node.node_id, index, subindex, data)
@@ -268,7 +279,8 @@ def test_sdo_read_fault():
     read = SdoRead(node,index,subindex)
     read.start()
 
-    node.canopen.send.assert_called()
+    assert node.canopen.send.called
+
     msg, = node.canopen.send.call_args[0]
     assert type(msg) == CanOpenMessageSdoReadRequest
     response = CanOpenMessageSdoError(node.canopen, node.node_id, index, subindex, 0)

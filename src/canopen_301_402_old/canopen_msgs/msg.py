@@ -3,8 +3,8 @@
 
 import can
 
-from brave_new_world.constants import *
-from brave_new_world.canopen_msgs.cob import CanOpenId
+from canopen_301_402.constants import *
+from canopen_301_402.canopen_301.cob import CanOpenId
 
 class CanOpenMessage(object):
     def __init__(self, function_code, node_id, service, data, request=False):
@@ -68,7 +68,7 @@ class CanOpenMessage(object):
 
         function_code, node_id = CanOpenId.decode(msg.arbitration_id)
 
-        connection_set = canopen.connection_set
+        connection_set = canopen.get_connection_set(node_id)
 
         service = connection_set.determine_service(function_code, node_id)
 

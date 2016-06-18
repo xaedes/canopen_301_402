@@ -1,73 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import can
-
-def set_timeout(timeout,callback):
-    '''
-    @summary: calls a function after a specified number of seconds
-    @param timeout: number of seconds
-    @param callback: function be called 
-    @result: 
-    '''
-    pass # TODO
-
-def collect_all_leaf_subclasses(Type):
-    '''
-    @summary: returns a list of classes that inherit from type and have no further inheriting subclasses
-    @param Type: new style class type
-    @result: list of classes
-    '''
-
-    # current subclasses
-    subclasses = Type.__subclasses__()
-
-    # no further inheriting subclasses; Type is part of result
-    if len(subclasses) == 0:
-        return [Type]
-    else:
-        # this type is no leaf type
-        # look for further inheriting subclasses
-        # and collect their leaf subclasses
-        result = list()
-        for subclass in subclasses:
-            result.extend(collect_all_leaf_subclasses(subclass))
-        return result
-
-def parseIntAutoBase(string):
-    if string is None: return None
-    string = string.strip()
-
-    # if it is a negative number the prefix starts after the minus sign
-    # use a variable offset where the prefix should start
-    if string[0] == "-":
-        offset = 1
-    else:
-        offset = 0
-
-
-    starting_on_prefix = string[offset:]
-    octal_digits = ["0","1","2","3","4","5","6","7"]
-    if starting_on_prefix[:2] == "0x":
-        base = 16
-    elif (starting_on_prefix[:2] == "0o") 
-          or ((starting_on_prefix[0] == "0")  # 306_v01030000.pdf pg. 9
-               and (starting_on_prefix[1] in octal_digits)):
-        base = 8
-    elif starting_on_prefix[:2] == "0b":
-        base = 2
-    else:
-        base = 10
-
-    return int(string,base)
-
-
-class HistoryListener(can.Listener):
-    def __init__(self):
-        self.msgs = list()
-    def on_message_received(self,msg):
-        self.msgs.append(msg)
-        
 def str_to_can_msg(string):
     '''
     @summary:      Converts string to can.Message
@@ -125,4 +58,27 @@ def can_msg_to_str(msg):
 
     result = (head+"#"+body).upper()
     return result
+
+
+def collect_all_leaf_subclasses(Type):
+    '''
+    @summary: returns a list of classes that inherit from type and have no further inheriting subclasses
+    @param Type: new style class type
+    @result: list of classes
+    '''
+
+    # current subclasses
+    subclasses = Type.__subclasses__()
+
+    # no further inheriting subclasses; Type is part of result
+    if len(subclasses) == 0:
+        return [Type]
+    else:
+        # this type is no leaf type
+        # look for further inheriting subclasses
+        # and collect their leaf subclasses
+        result = list()
+        for subclass in subclasses:
+            result.extend(collect_all_leaf_subclasses(subclass))
+        return result
 

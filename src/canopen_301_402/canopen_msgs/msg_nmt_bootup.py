@@ -5,14 +5,14 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.canopen_msgs.msg import CanOpenMessage
-from canopen_301_402.canopen_301.cob import CanOpenId
+from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageNmtBootup(CanOpenMessage):
     """docstring for CanOpenMessageNmtBootup"""
     def __init__(self, canopen, node_id):
         self.canopen = canopen
 
-        self.connection_set = self.canopen.get_connection_set(node_id)
+        self.connection_set = self.canopen.connection_set
         service = CanOpenService.nmt_error_control
         function_code = self.connection_set.determine_function_code(service)
         

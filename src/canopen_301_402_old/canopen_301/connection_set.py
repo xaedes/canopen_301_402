@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from brave_new_world.constants import *
+from canopen_301_402.constants import *
 
 class ConnectionSet(object):
     '''

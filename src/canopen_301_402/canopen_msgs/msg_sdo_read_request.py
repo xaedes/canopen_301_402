@@ -5,19 +5,15 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.canopen_msgs.msg import CanOpenMessage
-from canopen_301_402.canopen_301.cob import CanOpenId
-from canopen_301_402.assertions import Assertions
+from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageSdoReadRequest(CanOpenMessage):
     """docstring for CanOpenMessageSdoReadRequest"""
     def __init__(self, canopen, node_id, index, subindex):
-        Assertions.assert_node_id(node_id)
-        Assertions.assert_index(index)
-        Assertions.assert_subindex(subindex)
 
         self.canopen = canopen
 
-        self.connection_set = self.canopen.get_connection_set(node_id)
+        self.connection_set = self.canopen.connection_set
         service = CanOpenService.sdo_rx
         function_code = self.connection_set.determine_function_code(service)
 

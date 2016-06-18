@@ -1,62 +1,49 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from funcy import partial
+import threading
+import signal
+import sys
 
-from canopen_301_402.constants import *
-
-from canopen_301_402.canopen_301.obj_dict import CanOpenObjectDictionary
-from canopen_301_402.canopen_402.can402 import CanOpen402
-from canopen_301_402.canopen_301.eds import *
-
-from canopen_301_402.canopen_301.nmt import CanOpenNetworkManagement
-from canopen_301_402.canopen_301.sdo import CanOpenSdoTransfer
-from canopen_301_402.canopen_301.pdo import CanOpenPdoTransfer
-from canopen_301_402.canopen_301.connection_set import ConnectionSet
+import Queue
 
 class CanOpenNode(object):
-    def __init__(self, canopen, node_id, eds_filename=None):
+    """docstring for CanOpenNode"""
+    def __init__(self, canopen, node_id):
         super(CanOpenNode, self).__init__()
         self.canopen = canopen
         self.node_id = node_id
+    
+        self.current_operations = list()
+        self.running = False
+        self.thread = None
 
-        # load eds file containing application specific profile
-        self.eds = EdsFile()
-        if eds_filename is not None:
-            self.eds.read(eds_filename)
+    def start_thread(self):
+        self.running = True
+        self.thread = threading.Thread(target=self.spin)
 
-        # set up predefined connection set, mapping canopen services to function codes
-        self.connection_set = ConnectionSet()
-        self.connection_set.setup_from_eds(self.eds)
+        signal.signal(signal.SIGINT, self.signal_handler)
+        self.thread.start()
+        # self.thread.join()
 
-        # initialize services
-        self.nmt = CanOpenNetworkManagement(self)
-        self.sdo = CanOpenSdoTransfer(self)
-        self.pdo = CanOpenPdoTransfer(self)
+    def spin(self):
+        while self.running:
+            try:
+                msg = self.canopen.msg_queues[self.node_id].get(timeout=0.1)
 
-        # object dictionary
-        self.obj_dict = CanOpenObjectDictionary(self)
+                for op in self.current_operations:
+                    if op.process_msg(msg): 
+                        # op consumed msg
+                        break
 
-        self.state = Can301State.initialisation
+                self.current_operations = [op for op in self.current_operations if not op.evt_done.isSet()]
 
-        self.can402 = CanOpen402(self)
-        
-        
-        # setup routing to services
-        self.services = dict()
-        self.services[CanOpenService.nmt] = self.nmt
-        self.services[CanOpenService.nmt_error_control] = self.nmt
-        self.services[CanOpenService.sdo_tx] = self.sdo
-        self.services[CanOpenService.sdo_rx] = self.sdo
-        self.services[CanOpenService.pdo1_tx] = self.pdo
-        self.services[CanOpenService.pdo1_rx] = self.pdo
-        self.services[CanOpenService.pdo2_tx] = self.pdo
-        self.services[CanOpenService.pdo2_rx] = self.pdo
-        self.services[CanOpenService.pdo3_tx] = self.pdo
-        self.services[CanOpenService.pdo3_rx] = self.pdo
-        self.services[CanOpenService.pdo4_tx] = self.pdo
-        self.services[CanOpenService.pdo4_rx] = self.pdo
-        self.services[CanOpenService.sync] = None # todo
-        self.services[CanOpenService.emergency] = None # todo
+            except Queue.Empty:
+                pass
 
-
+    def signal_handler(self, signal, frame):
+        print('You pressed Ctrl+C!')
+        if not self.running:
+            sys.exit(0)
+        else:
+            self.running = False

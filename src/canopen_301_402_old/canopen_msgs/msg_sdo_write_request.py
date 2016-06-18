@@ -3,16 +3,22 @@
 
 import can
 
-from brave_new_world.constants import *
-from brave_new_world.canopen_msgs.msg import CanOpenMessage
-from brave_new_world.canopen_msgs.cob import CanOpenId
+from canopen_301_402.constants import *
+from canopen_301_402.canopen_msgs.msg import CanOpenMessage
+from canopen_301_402.canopen_301.cob import CanOpenId
+from canopen_301_402.assertions import Assertions
 
 class CanOpenMessageSdoWriteRequest(CanOpenMessage):
     """docstring for CanOpenMessageSdoWriteRequest"""
     def __init__(self, canopen, node_id, index, subindex, data):
+        Assertions.assert_node_id(node_id)
+        Assertions.assert_index(index)
+        Assertions.assert_subindex(subindex)
+        Assertions.assert_data(data,maximum_len=4)
+
         self.canopen = canopen
 
-        self.connection_set = self.canopen.connection_set
+        self.connection_set = self.canopen.get_connection_set(node_id)
         service = CanOpenService.sdo_rx
         function_code = self.connection_set.determine_function_code(service)
 

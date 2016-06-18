@@ -5,7 +5,7 @@ import can
 
 from canopen_301_402.constants import *
 from canopen_301_402.canopen_msgs.msg import CanOpenMessage
-from canopen_301_402.canopen_301.cob import CanOpenId
+from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageNmtRequest(CanOpenMessage):
     """docstring for CanOpenMessageNmtRequest"""
@@ -13,7 +13,7 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
         self.canopen = canopen
 
         # nmt message always uses default connection set (hence 0)
-        self.connection_set = self.canopen.get_connection_set(0)
+        self.connection_set = self.canopen.connection_set
         service = CanOpenService.nmt
         function_code = self.connection_set.determine_function_code(service)
         node_id = 0

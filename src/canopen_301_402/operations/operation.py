@@ -1,8 +1,8 @@
 
 import threading
 
-from brave_new_world.canopen_msgs.msgs import *
-from brave_new_world.constants import *
+from canopen_301_402.canopen_msgs.msgs import *
+from canopen_301_402.constants import *
 
 class AsyncOperation(object):
     """docstring for AsyncOperation"""
