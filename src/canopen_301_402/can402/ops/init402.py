@@ -35,7 +35,7 @@ class Init402(AsyncChain):
         enable_operation    = partial(Change402State, node=node, command=Can402StateCommand.enable_operation)
         set_mode            = partial(Set402Mode,     node=node, mode=Can402ModesOfOperation.position)
 
-        operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation]
+        operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation, set_mode]
 
         super(Init402, self).__init__(node, operations, *args, **kwargs)
         
