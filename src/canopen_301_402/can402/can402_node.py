@@ -3,6 +3,7 @@
 
 from canopen_301_402.constants import *
 from canopen_301_402.node import CanOpenNode
+from canopen_301_402.can402.ops.receive_pdo1 import ReceivePdo1
 
 class Can402Node(CanOpenNode):
     """docstring for Can402Node"""

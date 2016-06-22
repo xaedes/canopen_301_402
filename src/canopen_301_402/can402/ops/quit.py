@@ -15,7 +15,7 @@ class Quit(AsyncChain):
     def __init__(self, node, *args, **kwargs):
         self.node = node
 
-        shutdown            = partial(Change402State, node=node, command=Can402StateCommand.shutdown)
+        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown)
 
         reset_communication = partial(AsyncSendAndAwait,
                                 node = node,

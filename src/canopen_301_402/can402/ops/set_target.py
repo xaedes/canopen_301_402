@@ -8,6 +8,7 @@ from canopen_301_402.async.async_chain import AsyncChain
 from canopen_301_402.async.sdo_write import SdoWrite
 from canopen_301_402.can402.ops.notify_new_target import NotifyNewTarget
 
+import struct
 
 
 class SetTarget(AsyncChain):
@@ -23,7 +24,7 @@ class SetTarget(AsyncChain):
                                 index = Can402Objects.target_position[0], 
                                 subindex = Can402Objects.target_position[1], 
                                 data = struct.pack("<i",self.value))
-        notify_new_target   = partial(Notify402NewTarget,
+        notify_new_target   = partial(NotifyNewTarget,
                                 node = node, 
                                 relative = self.relative, 
                                 immediatly = self.immediatly)

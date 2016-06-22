@@ -30,10 +30,10 @@ class Init(AsyncChain):
                                                         CanOpenMessageNmtCommand, 
                                                         self.node.canopen, self.node.node_id, Can301StateCommand.start_remote_node))
 
-        shutdown            = partial(Change402State, node=node, command=Can402StateCommand.shutdown)
-        switch_on           = partial(Change402State, node=node, command=Can402StateCommand.switch_on)
-        enable_operation    = partial(Change402State, node=node, command=Can402StateCommand.enable_operation)
-        set_mode            = partial(Set402Mode,     node=node, mode=Can402ModesOfOperation.position)
+        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown)
+        switch_on           = partial(ChangeState, node=node, command=Can402StateCommand.switch_on)
+        enable_operation    = partial(ChangeState, node=node, command=Can402StateCommand.enable_operation)
+        set_mode            = partial(SetMode,     node=node, mode=Can402ModesOfOperation.position)
 
         operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation, set_mode]
 

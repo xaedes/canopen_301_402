@@ -5,6 +5,7 @@ from canopen_301_402.constants import *
 from canopen_301_402.async.async_operation import AsyncOperation
 from canopen_301_402.canopen_msgs.msgs import CanOpenMessage
 
+import struct
 
 class ReceivePdo1(AsyncOperation):
     """docstring for ReceivePdo1"""
