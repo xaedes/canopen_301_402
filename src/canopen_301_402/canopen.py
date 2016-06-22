@@ -12,7 +12,7 @@ import Queue
 
 from collections import defaultdict
 
-TRACE = True
+TRACE = False
 
 if TRACE:
     import hunter
@@ -49,7 +49,7 @@ class CanOpen(can.Listener):
 
 
     def on_message_received(self, msg):
-        hunter.trace(module_contains="canopen_301_402")
+        if TRACE: hunter.trace(module_contains="canopen_301_402")
 
         # convert message to canopen message
         if type(msg) == can.Message:
@@ -59,10 +59,10 @@ class CanOpen(can.Listener):
         if type(msg) == CanOpenMessage:
             msg = self.msgs.try_to_upgrage_canopen_message(msg)
 
-        print "---"
-        print type(msg), msg
-        print msg.__dict__
-        print ""
+        # print "---"
+        # print type(msg), msg
+        # print msg.__dict__
+        # print ""
 
         # history
         if self.enable_history:
