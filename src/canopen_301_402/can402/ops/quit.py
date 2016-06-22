@@ -15,14 +15,15 @@ class Quit(AsyncChain):
     def __init__(self, node, *args, **kwargs):
         self.node = node
 
-        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown)
+        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown, timeout = self.node.atomic_timeout)
 
         reset_communication = partial(AsyncSendAndAwait,
                                 node = node,
                                 send_msg_factory = partial(
                                                         CanOpenMessageNmtCommand, 
                                                         self.node.canopen, self.node.node_id, Can301StateCommand.reset_communication),
-                                await_msg_predicate = lambda msg: (type(msg)==CanOpenMessageNmtBootup))
+                                await_msg_predicate = lambda msg: (type(msg)==CanOpenMessageNmtBootup),
+                                timeout = self.node.atomic_timeout)
 
         operations = [shutdown, reset_communication]
 

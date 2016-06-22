@@ -13,6 +13,10 @@ class SdoWrite(AsyncOperation):
         self.index = index
         self.subindex = subindex
         self.data = data
+
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = node.atomic_timeout
+
         super(SdoWrite, self).__init__(node, *args, **kwargs)
         
     def do(self):

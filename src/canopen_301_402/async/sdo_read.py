@@ -13,6 +13,10 @@ class SdoRead(AsyncOperation):
         self.index = index
         self.subindex = subindex
         self.result = None
+
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = node.atomic_timeout
+
         super(SdoRead, self).__init__(node, *args, **kwargs)
         
     def do(self):

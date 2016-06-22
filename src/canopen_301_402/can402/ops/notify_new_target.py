@@ -22,14 +22,16 @@ class NotifyNewTarget(AsyncChain):
                     Can402ControlwordBits.new_set_point: True,
                     Can402ControlwordBits.abs_rel: self.relative,
                     Can402ControlwordBits.change_set_immediately: self.immediatly
-                })
+                },
+                timeout = self.node.atomic_timeout)
 
 
         reset = partial(ChangeControlword,
                 node = self.node,
                 updates = {
                     Can402ControlwordBits.new_set_point: False
-                })
+                },
+                timeout = self.node.atomic_timeout)
 
         
         operations = [notify, reset]

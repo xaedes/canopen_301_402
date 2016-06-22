@@ -22,18 +22,20 @@ class Init(AsyncChain):
                                 send_msg_factory = partial(
                                                         CanOpenMessageNmtCommand, 
                                                         self.node.canopen, self.node.node_id, Can301StateCommand.reset_communication),
-                                await_msg_predicate = lambda msg: (type(msg)==CanOpenMessageNmtBootup))
+                                await_msg_predicate = lambda msg: (type(msg)==CanOpenMessageNmtBootup),
+                                timeout = self.node.atomic_timeout)
 
         start_remote_node   = partial(AsyncSend,
                                 node = node,
                                 send_msg_factory = partial(
                                                         CanOpenMessageNmtCommand, 
-                                                        self.node.canopen, self.node.node_id, Can301StateCommand.start_remote_node))
+                                                        self.node.canopen, self.node.node_id, Can301StateCommand.start_remote_node),
+                                timeout = self.node.atomic_timeout)
 
-        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown)
-        switch_on           = partial(ChangeState, node=node, command=Can402StateCommand.switch_on)
-        enable_operation    = partial(ChangeState, node=node, command=Can402StateCommand.enable_operation)
-        set_mode            = partial(SetMode,     node=node, mode=Can402ModesOfOperation.position)
+        shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown,         timeout = self.node.atomic_timeout)
+        switch_on           = partial(ChangeState, node=node, command=Can402StateCommand.switch_on,        timeout = self.node.atomic_timeout)
+        enable_operation    = partial(ChangeState, node=node, command=Can402StateCommand.enable_operation, timeout = self.node.atomic_timeout)
+        set_mode            = partial(SetMode,     node=node, mode=Can402ModesOfOperation.position,        timeout = self.node.atomic_timeout)
 
         operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation, set_mode]
 

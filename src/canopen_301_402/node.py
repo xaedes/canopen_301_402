@@ -18,6 +18,10 @@ class CanOpenNode(object):
         self.running = False
         self.thread = None
 
+        # timeout in seconds for atomic operations
+        # i.e. not chains of operations!
+        self.atomic_timeout = 0.1
+
     def start_thread(self):
         self.running = True
         self.thread = threading.Thread(target=self.spin)
