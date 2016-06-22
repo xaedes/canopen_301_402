@@ -76,21 +76,42 @@ def test_process_msg():
     global evt_done_timeout
     node = mock.MagicMock()         
 
-    foo = "bar"
+    foo_msg = "bar"
 
     class Testclass(AsyncOperation):
         def __init__(self):
             super(Testclass, self).__init__(node=node)
         
         def process_msg(self, msg):
-            if msg == foo:
+            if msg == foo_msg:
                 self.on_success()
 
     foo = Testclass()
     foo.start()
-    foo.process_msg(foo)
+    foo.process_msg(foo_msg)
     foo.evt_done.wait(evt_done_timeout)
 
+    assert foo.evt_success.isSet()
+    assert not foo.evt_fault.isSet()
+    assert not foo.evt_timeout.isSet()
+    
+
+def test_current_op():
+    global evt_done_timeout
+    node = mock.MagicMock()         
+
+    node.current_operations = list()
+
+    foo = AsyncOperation(node)
+    foo.start()
+
+    assert foo in node.current_operations
+
+    foo.on_success()
+    
+    assert foo not in node.current_operations
+
+    assert foo.evt_done.isSet()
     assert foo.evt_success.isSet()
     assert not foo.evt_fault.isSet()
     assert not foo.evt_timeout.isSet()
