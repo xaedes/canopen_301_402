@@ -41,17 +41,23 @@ class AsyncOperation(object):
     def process_msg(self, msg):
         return False
 
+    def _on_done(self):
+        self.node.current_operations.remove(self)
+
     def on_success(self):
         self.evt_success.set()
         self.evt_done.set()
+        self._on_done()
         
     def on_fault(self):
         self.evt_fault.set()
         self.evt_done.set()
+        self._on_done()
         
     def on_timeout(self):
         self.evt_timeout.set()
         self.evt_done.set()
+        self._on_done()
 
 
 
