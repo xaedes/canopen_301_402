@@ -42,7 +42,11 @@ class AsyncOperation(object):
         return False
 
     def _on_done(self):
-        self.node.current_operations.remove(self)
+        if self in self.node.current_operations:
+            try:
+                self.node.current_operations.remove(self)
+            except:
+                pass
 
     def on_success(self):
         self.evt_success.set()
