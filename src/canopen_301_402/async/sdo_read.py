@@ -13,6 +13,7 @@ class SdoRead(AsyncOperation):
         self.index = index
         self.subindex = subindex
         self.result = None
+        self.response_timestamp = None
 
         if "timeout" not in kwargs:
             kwargs["timeout"] = node.atomic_timeout
@@ -29,6 +30,7 @@ class SdoRead(AsyncOperation):
              and (msg.subindex == self.subindex)):
 
             self.result = msg.read_data
+            self.response_timestamp = msg.original_can_msg.original_can_msg.timestamp
             self.on_success()
             return True
 
@@ -36,6 +38,8 @@ class SdoRead(AsyncOperation):
         elif ((type(msg) == CanOpenMessageSdoError)
              and (msg.index == self.index)
              and (msg.subindex == self.subindex)):
+        
+            self.response_timestamp = msg.original_can_msg.original_can_msg.timestamp
 
             self.on_fault()
             return True

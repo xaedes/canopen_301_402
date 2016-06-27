@@ -13,6 +13,7 @@ class SdoWrite(AsyncOperation):
         self.index = index
         self.subindex = subindex
         self.data = data
+        self.response_timestamp = None
 
         if "timeout" not in kwargs:
             kwargs["timeout"] = node.atomic_timeout
@@ -28,12 +29,16 @@ class SdoWrite(AsyncOperation):
              and (msg.index == self.index)
              and (msg.subindex == self.subindex)):
 
+            self.response_timestamp = msg.original_can_msg.original_can_msg.timestamp
+
             self.on_success()
             return True
             
         elif ((type(msg) == CanOpenMessageSdoError)
              and (msg.index == self.index)
              and (msg.subindex == self.subindex)):
+
+            self.response_timestamp = msg.original_can_msg.original_can_msg.timestamp
 
             self.on_fault()
             return True
