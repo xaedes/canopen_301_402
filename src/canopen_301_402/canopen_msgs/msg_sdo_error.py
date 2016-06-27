@@ -10,7 +10,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageSdoError(CanOpenMessage):
     """docstring for CanOpenMessageSdoError"""
-    def __init__(self, canopen, node_id, index, subindex, error_code):
+    def __init__(self, canopen, node_id, index, subindex, error_code, original_can_msg=None):
 
         self.canopen = canopen
         # set sdo write request message fields
@@ -32,7 +32,7 @@ class CanOpenMessageSdoError(CanOpenMessage):
         self._error_code = error_code
 
         # initialize CanOpenMessage
-        super(CanOpenMessageSdoError, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageSdoError, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg)
         
 
     @property
@@ -76,7 +76,7 @@ class CanOpenMessageSdoError(CanOpenMessage):
             error_code = msg.data[4] | (msg.data[5]<<8) | (msg.data[6]<<16) | (msg.data[7]<<24)
 
 
-            return CanOpenMessageSdoError(canopen, msg.node_id, index, subindex, error_code)
+            return CanOpenMessageSdoError(canopen, msg.node_id, index, subindex, error_code, original_can_msg = msg)
             
         else:
             return None

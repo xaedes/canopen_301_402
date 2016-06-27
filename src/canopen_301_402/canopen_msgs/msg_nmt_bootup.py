@@ -9,7 +9,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageNmtBootup(CanOpenMessage):
     """docstring for CanOpenMessageNmtBootup"""
-    def __init__(self, canopen, node_id):
+    def __init__(self, canopen, node_id, original_can_msg=None):
         self.canopen = canopen
 
         self.connection_set = self.canopen.connection_set
@@ -20,7 +20,7 @@ class CanOpenMessageNmtBootup(CanOpenMessage):
 
 
         # initialize CanOpenMessage
-        super(CanOpenMessageNmtBootup, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageNmtBootup, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg)
     
     
     @classmethod
@@ -38,7 +38,7 @@ class CanOpenMessageNmtBootup(CanOpenMessage):
             (len(msg.data) >= 1) and 
             (msg.data[0] == 0)):
 
-            return CanOpenMessageNmtBootup(canopen, msg.node_id)
+            return CanOpenMessageNmtBootup(canopen, msg.node_id, original_can_msg = msg)
         else:
             return None
 

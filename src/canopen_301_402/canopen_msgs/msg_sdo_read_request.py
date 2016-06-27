@@ -9,7 +9,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageSdoReadRequest(CanOpenMessage):
     """docstring for CanOpenMessageSdoReadRequest"""
-    def __init__(self, canopen, node_id, index, subindex):
+    def __init__(self, canopen, node_id, index, subindex, original_can_msg=None):
 
         self.canopen = canopen
 
@@ -24,7 +24,7 @@ class CanOpenMessageSdoReadRequest(CanOpenMessage):
 
 
         # initialize CanOpenMessage
-        super(CanOpenMessageSdoReadRequest, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageSdoReadRequest, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg)
         
         # set sdo read request message fields
         self._index = index
@@ -66,7 +66,7 @@ class CanOpenMessageSdoReadRequest(CanOpenMessage):
             print hex(index)
             print hex(subindex)
 
-            return CanOpenMessageSdoReadRequest(canopen, msg.node_id, index, subindex)
+            return CanOpenMessageSdoReadRequest(canopen, msg.node_id, index, subindex, original_can_msg = msg)
 
             
         else:

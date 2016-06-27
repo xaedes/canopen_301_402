@@ -9,7 +9,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageSdoWriteRequest(CanOpenMessage):
     """docstring for CanOpenMessageSdoWriteRequest"""
-    def __init__(self, canopen, node_id, index, subindex, data):
+    def __init__(self, canopen, node_id, index, subindex, data, original_can_msg=None):
         self.canopen = canopen
 
         self.connection_set = self.canopen.connection_set
@@ -36,7 +36,7 @@ class CanOpenMessageSdoWriteRequest(CanOpenMessage):
 
 
         # initialize CanOpenMessage
-        super(CanOpenMessageSdoWriteRequest, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageSdoWriteRequest, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg)
         
         # set sdo write request message fields
         self._index = index
@@ -84,7 +84,7 @@ class CanOpenMessageSdoWriteRequest(CanOpenMessage):
             if len_write_data != len(write_data):
                 return None
 
-            return CanOpenMessageSdoWriteRequest(canopen, msg.node_id, index, subindex, write_data)
+            return CanOpenMessageSdoWriteRequest(canopen, msg.node_id, index, subindex, write_data, original_can_msg = msg)
 
             
         else:

@@ -9,7 +9,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageNmtRequest(CanOpenMessage):
     """docstring for CanOpenMessageNmtRequest"""
-    def __init__(self, canopen):
+    def __init__(self, canopen, original_can_msg=None):
         self.canopen = canopen
 
         # nmt message always uses default connection set (hence 0)
@@ -20,7 +20,7 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
         data = [] 
 
         # initialize CanOpenMessage
-        super(CanOpenMessageNmtRequest, self).__init__(function_code, node_id, service, data) 
+        super(CanOpenMessageNmtRequest, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg) 
     
     def to_can_msg(self):
         '''
@@ -48,7 +48,7 @@ class CanOpenMessageNmtRequest(CanOpenMessage):
             (msg.node_id == 0) and 
             (msg.request == True)): 
 
-            return CanOpenMessageNmtRequest(canopen)
+            return CanOpenMessageNmtRequest(canopen, original_can_msg = msg)
 
             
         else:

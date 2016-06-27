@@ -9,7 +9,7 @@ from canopen_301_402.canopen_msgs.cob import CanOpenId
 
 class CanOpenMessageNmtCommand(CanOpenMessage):
     """docstring for CanOpenMessageNmtCommand"""
-    def __init__(self, canopen, node_id, command):
+    def __init__(self, canopen, node_id, command, original_can_msg=None):
         '''
         @summary: 
         @param canopen: CanOpen instance
@@ -27,7 +27,7 @@ class CanOpenMessageNmtCommand(CanOpenMessage):
         data = [Can301StateCommandBits[command], node_id]
 
         # initialize CanOpenMessage
-        super(CanOpenMessageNmtCommand, self).__init__(function_code, node_id, service, data)
+        super(CanOpenMessageNmtCommand, self).__init__(function_code, node_id, service, data, original_can_msg = original_can_msg)
         
         # set nmt message fields
         self._node_id = node_id # this overwrites CanOpenMessage.node_id
@@ -76,7 +76,7 @@ class CanOpenMessageNmtCommand(CanOpenMessage):
             if command is None:
                 return None
 
-            return CanOpenMessageNmtCommand(canopen,node_id,command)
+            return CanOpenMessageNmtCommand(canopen, node_id, command, original_can_msg = msg)
 
             
         else:
