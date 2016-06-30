@@ -58,6 +58,75 @@ class CanOpenService(Enum):
     sdo_rx            = 12
     nmt_error_control = 13
 
+class CanOpenErrorRegisterBits(Enum):
+    generic                 = 0
+    current                 = 1
+    voltage                 = 2
+    temperature             = 3
+    communication           = 4
+    device_profile_specific = 5
+    reservered              = 6 # bit is always zero
+    manufacturer            = 7
+
+class CanOpenEmergencyErrorCodeClass(Enum):
+    no_error = 0
+    generic = 1
+    current = 2
+    current_device_input = 3
+    current_device_inside = 4
+    current_device_output = 5
+    voltage = 6
+    voltage_main = 7
+    voltage_inside = 8
+    voltage_output = 9
+    temperature = 10
+    temperature_ambient = 11
+    temperature_device = 12
+    can_open_device_hardware = 13
+    can_open_device_software = 14
+    internal_software = 15
+    user_software = 16
+    data_set = 17
+    additional_modules = 18
+    monitoring = 19
+    monitoring_communication = 20
+    monitoring_protocol = 21
+    external = 22
+    additional_functions = 23
+    can_open_device_specific = 24
+    
+# upper byte of (16bit) emergency error code specifies error class
+CanOpenEmergencyErrorCodeClassByte = dict({
+    CanOpenEmergencyErrorCodeClass.no_error:                  0x00,
+    CanOpenEmergencyErrorCodeClass.generic:                   0x10,
+    CanOpenEmergencyErrorCodeClass.current:                   0x20,
+    CanOpenEmergencyErrorCodeClass.current_device_input:      0x21,
+    CanOpenEmergencyErrorCodeClass.current_device_inside:     0x22,
+    CanOpenEmergencyErrorCodeClass.current_device_output:     0x23,
+    CanOpenEmergencyErrorCodeClass.voltage:                   0x30,
+    CanOpenEmergencyErrorCodeClass.voltage_main:              0x31,
+    CanOpenEmergencyErrorCodeClass.voltage_inside:            0x32,
+    CanOpenEmergencyErrorCodeClass.voltage_output:            0x33,
+    CanOpenEmergencyErrorCodeClass.temperature:               0x40,
+    CanOpenEmergencyErrorCodeClass.temperature_ambient:       0x41,
+    CanOpenEmergencyErrorCodeClass.temperature_device:        0x42,
+    CanOpenEmergencyErrorCodeClass.can_open_device_hardware:  0x50,
+    CanOpenEmergencyErrorCodeClass.can_open_device_software:  0x60,
+    CanOpenEmergencyErrorCodeClass.internal_software:         0x61,
+    CanOpenEmergencyErrorCodeClass.user_software:             0x62,
+    CanOpenEmergencyErrorCodeClass.data_set:                  0x63,
+    CanOpenEmergencyErrorCodeClass.additional_modules:        0x70,
+    CanOpenEmergencyErrorCodeClass.monitoring:                0x80,
+    CanOpenEmergencyErrorCodeClass.monitoring_communication:  0x81,
+    CanOpenEmergencyErrorCodeClass.monitoring_protocol:       0x82,
+    CanOpenEmergencyErrorCodeClass.external:                  0x90,
+    CanOpenEmergencyErrorCodeClass.additional_functions:      0xF0,
+    CanOpenEmergencyErrorCodeClass.can_open_device_specific:  0xFF
+})
+    
+
+
+
 CanOpenBroadcastServices = [CanOpenService.nmt, CanOpenService.sync]
 
 CanOpenPredefinedConnectionSet = dict({

@@ -35,9 +35,8 @@ class Init(AsyncChain):
         shutdown            = partial(ChangeState, node=node, command=Can402StateCommand.shutdown,         timeout = self.node.atomic_timeout)
         switch_on           = partial(ChangeState, node=node, command=Can402StateCommand.switch_on,        timeout = self.node.atomic_timeout)
         enable_operation    = partial(ChangeState, node=node, command=Can402StateCommand.enable_operation, timeout = self.node.atomic_timeout)
-        set_mode            = partial(SetMode,     node=node, mode=Can402ModesOfOperation.position,        timeout = self.node.atomic_timeout)
 
-        operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation, set_mode]
+        operations = [reset_communication, start_remote_node, shutdown, switch_on, enable_operation]
 
         super(Init, self).__init__(node, operations, *args, **kwargs)
         
