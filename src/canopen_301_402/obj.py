@@ -15,9 +15,9 @@ class CanOpenObject(object):
         # get eds object definition
         self.eds_obj = self.node.eds.get_object(index, subindex)
 
-        print "CanOpenObject"
-        print hex(index), hex(subindex), 
-        print self.eds_obj
+        # print "CanOpenObject"
+        # print hex(index), hex(subindex), 
+        # print self.eds_obj
 
         if self.eds_obj is not None:
             # if there is an eds object definition assign datatype and defaults
