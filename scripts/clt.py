@@ -5,6 +5,7 @@ from __future__ import division
 import os
 import readline
 import struct
+import re
 
 import can
 from funcy import partial
@@ -17,7 +18,7 @@ from canopen_301_402.async.sdo_read import SdoRead
 
 from canopen_301_402.node import CanOpenNode
 
-
+RE_SPACE = re.compile('.*\s+$', re.M)
  
 class CanRelated(object):
     def __init__(self):
@@ -32,6 +33,7 @@ class CanRelated(object):
         self.initialized = False
 
         self.timeout = 1
+
 
 class CommandLineTool(object):
     """docstring for CommandLineTool"""
@@ -58,27 +60,30 @@ class CommandLineTool(object):
         self.init_autocomplete()
         self.init_can()
 
-    def _complete_last_arg(self, args, options):
+    def _complete_arg(self, args, options, index=-1):
         if not args:
-            return options
+            return [option +" " for option in options]
         else:
-            return [option for option in options if option.startswith(args[-1])]
+            return [option +" " for option in options if option.startswith(args[-1])]
 
 
     def complete_commands(self):
         return [cmd + " " for cmd in self.commands]
 
     def complete_device(self, args):
-        return self._complete_last_arg(args, self.can_devices)
+        return self._complete_arg(args, self.can_devices)
         
     def complete_node(self, args):
-        return self._complete_last_arg(args, map(str,[1,2]))
+        return self._complete_arg(args, map(str,[1,2]))
 
     def complete_read(self, args):
-        return self._complete_last_arg(args, self.can_objects)
+        return self._complete_arg(args, self.can_objects, index=0)
 
     def complete_write(self, args):
-        return self._complete_last_arg(args, self.can_objects)
+        if len(args) > 0:
+            return []
+        else:
+            return self._complete_arg(args, self.can_objects, index=0)
 
     def complete_list(self, args):
         return []
@@ -87,7 +92,7 @@ class CommandLineTool(object):
         return []
 
     def complete_eds(self, args):
-        return self._complete_last_arg(args, self.eds_files)
+        return self._complete_arg(args, self.eds_files)
         
     def commands_completer(self, text, state):
         # get already inputted text
@@ -106,6 +111,9 @@ class CommandLineTool(object):
         # print len(line), line
 
         line = line.split()
+
+        if RE_SPACE.match(buffer):
+            line.append('')
 
         if not line:
             # shows all commands
@@ -180,6 +188,23 @@ class CommandLineTool(object):
         else:
             return cmd, args
 
+
+    def can_object_valid(self, obj):
+        return hasattr(Can402Objects, obj)
+        # return obj in self.can_objects
+
+    def parse_can_object(self, obj):
+        index, subindex = getattr(Can402Objects, obj)
+        return index, subindex
+
+    def is_parseable_number(self, str):
+        try:
+            parseIntAutoBase(str)
+            return True
+        except ValueError:
+            return False
+
+
     def cmd_device(self, args):
         if not args or args[0] not in self.can_devices:
             raise ValueError()
@@ -199,13 +224,6 @@ class CommandLineTool(object):
         self.init_can()
 
 
-    def can_object_valid(self, obj):
-        return hasattr(Can402Objects, obj)
-        # return obj in self.can_objects
-
-    def parse_can_object(self, obj):
-        index, subindex = getattr(Can402Objects, obj)
-        return index, subindex
 
     def cmd_read(self, args):
         if not args or not self.parse_can_object(args[0]):
@@ -221,8 +239,24 @@ class CommandLineTool(object):
 
             print ""
             print self.can.node.object_dict[(index, subindex)].value
-            
+
             # print bytearray(read.result)
+        elif read.evt_timeout.isSet():
+            print "timeout"
+        elif read.evt_fault.isSet():
+            print "fault"
+
+    def cmd_write(self, args):
+        if len(args)<2 or not self.parse_can_object(args[0]):
+            raise ValueError()
+        index, subindex = self.parse_can_object(args[0])
+        write = SdoWrite(self.can.node, index, subindex, data, timeout=self.can.timeout)
+        write.start()
+        write.evt_done.wait()
+
+        if write.evt_success.isSet():
+            print "Write success"
+
         elif read.evt_timeout.isSet():
             print "timeout"
         elif read.evt_fault.isSet():
@@ -245,14 +279,6 @@ class CommandLineTool(object):
         self.running = False
         self.stop_can_node()
 
-
-
-    def is_parseable_number(self, str):
-        try:
-            parseIntAutoBase(str)
-            return True
-        except ValueError:
-            return False
 
 
     def spin(self):
