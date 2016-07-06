@@ -24,7 +24,6 @@ class CanOpen(can.Listener):
     def __init__(self, bus):
         super(CanOpen, self).__init__()
         self.bus = bus
-        self.notifier = can.Notifier(self.bus,[self])
 
         self.connection_set = ConnectionSet()
 
@@ -34,6 +33,8 @@ class CanOpen(can.Listener):
 
         self.msg_history = list()
         self.enable_history = True
+        
+        self.notifier = can.Notifier(self.bus,[self])
 
     def send(self, msg):
         # send can msg
