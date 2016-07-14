@@ -206,6 +206,8 @@ class EdsFile(object):
         self.manufacturer_objects = None
         self.optional_objects = None
 
+        self.objects_by_name = dict()
+
     def read(self, filename):
         '''
         @summary: reads in eds file from filename
@@ -224,6 +226,15 @@ class EdsFile(object):
         self.mandatory_objects = EdsObjectList(self.config_parser,"MandatoryObjects")
         self.optional_objects = EdsObjectList(self.config_parser,"OptionalObjects")
         self.manufacturer_objects = EdsObjectList(self.config_parser,"ManufacturerObjects")
+
+        self.objects_by_name = dict()
+        self._add_objects_to_dict(self.mandatory_objects)
+        self._add_objects_to_dict(self.optional_objects)
+        self._add_objects_to_dict(self.manufacturer_objects)
+
+    def _add_objects_to_dict(self, object_list):
+        for obj in object_list.objects.itervalues():
+            self.objects_by_name[obj.parameter_name] = obj
 
     def get_object(self, index, subindex):
 
