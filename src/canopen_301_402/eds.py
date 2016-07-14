@@ -91,6 +91,8 @@ class EdsObject(object):
             self.valid = True
             self.index = index
             self.subindex = subindex
+            self.datatype = None
+            self.default_value = None
 
             
             self.parameter_name = dictionary["ParameterName"]
