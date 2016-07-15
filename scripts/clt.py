@@ -6,6 +6,7 @@ import os
 import readline
 import struct
 import re
+import traceback
 
 import can
 from funcy import partial
@@ -32,7 +33,7 @@ class CanRelated(object):
 
         self.initialized = False
 
-        self.timeout = 1
+        self.timeout = 1.
 
 
 class CommandLineTool(object):
@@ -42,23 +43,43 @@ class CommandLineTool(object):
         self.running = False
 
         self.eds_files = [
-            "/home/xaedes/gits/fahrrad/eds/605.3150.68-B-EK-2-60.eds",
-            "/home/xaedes/gits/fahrrad/workspace/src/fahrrad_antrieb/src/fahrrad_antrieb/epos2.eds"
+            "/home/xaedes/gits/fahrrad/workspace/src/fahrrad_antrieb/src/fahrrad_antrieb/epos2.eds",
+            "/home/xaedes/gits/fahrrad/eds/605.3150.68-B-EK-2-60.eds"
         ]
 
         self.can_devices = self.list_can_devices()
-        self.commands = ["device","node","init","read","write","list","quit","eds"]
+        self.commands = ["help","device","node","init","read","write","list","quit","eds"]
 
         self.can = CanRelated()
         self.can.can_device = self.can_devices[0]
         self.can.node_id = 1
         self.can.eds = self.eds_files[0]
 
-        self.can_objects = [field for field in dir(Can402Objects) if not field.startswith("_")]
-        print self.can_objects
+        self.preset_can_objects = [field for field in dir(Can402Objects) if not field.startswith("_")]
+        self._can_objects = dict()
 
         self.init_autocomplete()
         self.init_can()
+
+        print self.can_objects
+
+    @property
+    def can_objects(self):
+        return self._can_objects
+        
+    def update_can_objects(self):
+        result = dict()
+        for parameter_name in self.preset_can_objects:
+            result[parameter_name] = getattr(Can402Objects,parameter_name)
+
+
+        for parameter_name, obj in self.can.node.eds.objects_by_name.iteritems():
+            if obj.subindex is not None:
+                print "L77", parameter_name, obj.index, obj.subindex
+                result[parameter_name.replace(" ","")] = obj.index, obj.subindex
+
+        self._can_objects = result
+    
 
     def _complete_arg(self, args, options, index=-1):
         if not args:
@@ -77,15 +98,18 @@ class CommandLineTool(object):
         return self._complete_arg(args, map(str,[1,2]))
 
     def complete_read(self, args):
-        return self._complete_arg(args, self.can_objects, index=0)
+        return self._complete_arg(args, self.can_objects.iterkeys(), index=0)
 
     def complete_write(self, args):
         if len(args) > 0:
             return []
         else:
-            return self._complete_arg(args, self.can_objects, index=0)
+            return self._complete_arg(args, self.can_objects.iterkeys(), index=0)
 
     def complete_list(self, args):
+        return []
+        
+    def complete_help(self, args):
         return []
         
     def complete_quit(self, args):
@@ -98,22 +122,33 @@ class CommandLineTool(object):
         # get already inputted text
         line_buffer = readline.get_line_buffer()
 
+        # print "line_buffer '%s'" % line_buffer
+
         orig_len = len(line_buffer)
         line = line_buffer.lstrip()
         stripped = orig_len - len(line)
         begidx = readline.get_begidx() - stripped
         endidx = readline.get_endidx() - stripped        
-
+        # print "orig_len", orig_len
+        # print "line", line
+        # print "stripped", stripped
+        # print "begidx", begidx
+        # print "endidx", endidx
         being_completed = line[begidx:endidx]
 
-        # print "_"+being_completed+"_"
+        # print "being_completed '%s'" % being_completed
 
         # print len(line), line
 
         line = line.split()
+        # print "len(line)", len(line)
 
-        if RE_SPACE.match(buffer):
+        if RE_SPACE.match(line_buffer):
             line.append('')
+
+        # print type(line)
+        # print line
+        # print "len(line)", len(line)
 
         if not line:
             # shows all commands
@@ -143,7 +178,7 @@ class CommandLineTool(object):
         readline.parse_and_bind("tab: complete")
 
     def stop_can_node(self):
-        if self.can.node is not None:
+        if self.can.node is not None and self.can.node.thread is not None:
             self.can.node.running = False
             self.can.node.thread.join()
 
@@ -158,8 +193,9 @@ class CommandLineTool(object):
             self.can.node = CanOpenNode(self.can.canopen,node_id=self.can.node_id)
             self.can.node.eds.read(self.can.eds)
 
-            for can_object in self.can_objects:
-                self.can.node.init_object(*self.parse_can_object(can_object))
+            self.update_can_objects()
+            for index, subindex in self.can_objects.itervalues():
+                self.can.node.init_object(index, subindex)
 
             self.can.node.start_thread()
             self.initialized = True
@@ -169,8 +205,9 @@ class CommandLineTool(object):
             print "\teds: %s" % self.can.eds
 
         except Exception, e:
+            traceback.print_exc()
             raise e
-    
+
     def list_can_devices(self):
         return ["can0","vcan0"]
 
@@ -193,9 +230,12 @@ class CommandLineTool(object):
         return hasattr(Can402Objects, obj)
         # return obj in self.can_objects
 
-    def parse_can_object(self, obj):
-        index, subindex = getattr(Can402Objects, obj)
-        return index, subindex
+    def parse_can_object(self, obj_name):
+        if obj_name not in self.can_objects:
+            return None
+        else:
+            return self.can_objects[obj_name]
+
 
     def is_parseable_number(self, str):
         try:
@@ -233,12 +273,14 @@ class CommandLineTool(object):
         read.start()
         read.evt_done.wait()
         if read.evt_success.isSet():
+            print "raw data:"
             for byte in read.result:
                 print hex(byte),
+
             self.can.node.object_dict[(index, subindex)].update_raw_data(read.result)
 
             print ""
-            print self.can.node.object_dict[(index, subindex)].value
+            print "decoded value:", self.can.node.object_dict[(index, subindex)].value
 
             # print bytearray(read.result)
         elif read.evt_timeout.isSet():
@@ -264,11 +306,23 @@ class CommandLineTool(object):
 
     def cmd_eds(self, args):
         if not args:
-            raise ValueError()
+            print "  Missing parameter!"
+            print "  Please specify path to eds file like this:"
+            print "  > eds /path/to/file.eds"
+            return
 
+        original_value = self.can.eds
         self.can.eds = args[0]
+
         print "Ok, set eds file to '%s'." % self.can.eds
-        self.init_can()
+
+        try:
+            self.init_can()
+        except:
+            print "Error during CAN init. Set eds file to old value '%s'." % original_value
+            self.can.eds = original_value
+
+            self.init_can()
 
 
 
@@ -280,6 +334,11 @@ class CommandLineTool(object):
         self.stop_can_node()
 
 
+    def cmd_list(self, args):
+        pass
+
+    def cmd_help(self, args):
+        print "available commands: " + ",".join(self.commands)
 
     def spin(self):
         self.running = True
