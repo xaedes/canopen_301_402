@@ -80,10 +80,10 @@ class EdsComments(object):
 
 class EdsObject(object):
     """docstring for EdsObject"""
-    def __init__(self, config_parser, index, subindex = 0):
+    def __init__(self, config_parser, index, subindex = None):
         super(EdsObject, self).__init__()
         object_id_str = str.upper(hex(index)[2:])
-        if subindex > 0:
+        if subindex is not None:
             object_id_str += "sub" + str.upper(hex(subindex)[2:])
         
         try:
@@ -94,7 +94,6 @@ class EdsObject(object):
             self.datatype = None
             self.default_value = None
 
-            
             self.parameter_name = dictionary["ParameterName"]
             if dictionary["ObjectType"] is None:
                 # Missing  ObjectType  equals  ObjectType  VAR. (306_v01030000.pdf pg. 15)
@@ -150,6 +149,9 @@ class EdsObject(object):
                 self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
                 self.pdo_mapping = dictionary["PDOMapping"] == "1"
 
+                self.subindex = 0
+
+
             elif self.object_type in [CanOpenObjectType.array, CanOpenObjectType.record]: 
                 # array or record type
 
@@ -158,8 +160,9 @@ class EdsObject(object):
                 self.sub_objects = list()
 
                 # read sub objects
-                for k in range(1,self.sub_number):
+                for k in range(0,self.sub_number):
                     self.sub_objects.append(EdsObject(config_parser, self.index, k))
+            
 
         except NoSectionError:
             self.valid = False
@@ -234,18 +237,24 @@ class EdsFile(object):
 
     def _add_objects_to_dict(self, object_list):
         for obj in object_list.objects.itervalues():
-            self.objects_by_name[obj.parameter_name] = obj
+            if obj.valid:
+                self.objects_by_name[obj.parameter_name] = obj
+                if hasattr(obj,"sub_objects"):
+                    for subobj in obj.sub_objects:
+                        if subobj.valid:
+                            self.objects_by_name[subobj.parameter_name] = subobj
 
     def get_object(self, index, subindex):
+        # print hex(index), hex(subindex)
 
         def get_object_from_object_list(object_list):
             if object_list is not None:
                 if index in object_list.objects:
                     obj = object_list.objects[index]
-                    if subindex == 0:
-                        return obj
-                    else:
+                    if hasattr(obj,"sub_objects"):
                         return obj.sub_objects[subindex]
+                    else:
+                        return obj
 
         result = get_object_from_object_list(self.mandatory_objects)
         if result is None:
