@@ -149,7 +149,8 @@ class EdsObject(object):
                 self.high_limit = parseIntAutoBase(dictionary["HighLimit"])
                 self.pdo_mapping = dictionary["PDOMapping"] == "1"
 
-                self.subindex = 0
+                if self.subindex is None:
+                    self.subindex = 0
 
 
             elif self.object_type in [CanOpenObjectType.array, CanOpenObjectType.record]: 
@@ -160,7 +161,7 @@ class EdsObject(object):
                 self.sub_objects = list()
 
                 # read sub objects
-                for k in range(0,self.sub_number):
+                for k in range(0,self.sub_number+1):
                     self.sub_objects.append(EdsObject(config_parser, self.index, k))
             
 
