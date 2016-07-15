@@ -338,9 +338,17 @@ class Can402StatuswordBits(Enum):
     unused_1 = 15
 
 class Can402ModesOfOperation(Enum):
-    position = 0
-    velocity = 1
-    homing = 2
+    interpolated_position = 7
+    homing = 6
+    profile_velocity = 3
+    profile_position = 1
+    position = -1
+    velocity = -2
+    current = -3
+    diagnostic = -4
+    master_encoder = -5
+    step_direction = -6
+    
     
 Can402ModesOfOperationBits = {
     Can402ModesOfOperation.position: 1,
