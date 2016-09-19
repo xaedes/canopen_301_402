@@ -75,7 +75,6 @@ class CommandLineTool(object):
 
         for parameter_name, obj in self.can.node.eds.objects_by_name.iteritems():
             if obj.subindex is not None:
-                print "L77", parameter_name, obj.index, obj.subindex
                 result[parameter_name.replace(" ","")] = obj.index, obj.subindex
 
         self._can_objects = result
@@ -352,10 +351,12 @@ class CommandLineTool(object):
 
             if cmd is not None:
                 impl = getattr(self, "cmd_" + cmd)
-                try:
-                    impl(args)
-                except ValueError:
-                    raise e
+                impl(args)
+                # try:
+                    # impl(args)
+                # except ValueError, e:
+# 
+                    # raise e
 
                 # print "Execute cmd %s" % cmd
             # print inp == self.commands_completer(inp,0)
