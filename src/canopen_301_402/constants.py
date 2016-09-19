@@ -223,7 +223,8 @@ class Can402State(Enum):
 
 Can402StateTransitions = dict({
             Can402State.switch_on_disabled: {
-                    Can402StateCommand.shutdown:              Can402State.ready_to_switch_on
+                    Can402StateCommand.shutdown:              Can402State.ready_to_switch_on,
+                    Can402StateCommand.fault_reset:           Can402State.switch_on_disabled
                 },
             Can402State.ready_to_switch_on: {
                     Can402StateCommand.disable_voltage:       Can402State.switch_on_disabled,
