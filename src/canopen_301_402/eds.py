@@ -243,7 +243,7 @@ class EdsFile(object):
                 if hasattr(obj,"sub_objects"):
                     for subobj in obj.sub_objects:
                         if subobj.valid:
-                            self.objects_by_name[subobj.parameter_name] = subobj
+                            self.objects_by_name[obj.parameter_name + " " + subobj.parameter_name] = subobj
 
     def get_object(self, index, subindex):
         # print hex(index), hex(subindex)
